@@ -115,7 +115,6 @@ void NifWidget::initializeGL()
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_ALPHA_TEST);
-    f->glAlphaFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     f->glEnable(GL_CULL_FACE);
     f->glClearColor(0.18, 0.18, 0.18, 1.0);
 }

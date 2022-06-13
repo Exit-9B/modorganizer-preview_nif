@@ -67,4 +67,6 @@ public:
     float lightingEffect1{ 0.3f };
     float lightingEffect2{ 2.0f };
     float envReflection{ 1.0f };
+
+    float alphaThreshold{ 0.0f };
 };

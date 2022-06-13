@@ -173,6 +173,10 @@ OpenGLShape::OpenGLShape(
         lightingEffect1 = shader->GetSoftlight();
         lightingEffect2 = shader->GetRimlightPower();
         envReflection = shader->GetEnvironmentMapScale();
+
+        if (auto alphaProperty = nifFile->GetAlphaProperty(niShape)) {
+            alphaThreshold = alphaProperty->threshold / 255.0f;
+        }
     }
 }
 
@@ -272,6 +276,9 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("lightingEffect2", lightingEffect2);
 
     program->setUniformValue("envReflection", envReflection);
+
+    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+    f->glAlphaFunc(GL_GREATER, alphaThreshold);
 }
 
 QVector2D OpenGLShape::convertVector2(nifly::Vector2 vector)
