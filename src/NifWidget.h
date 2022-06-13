@@ -54,7 +54,7 @@ private:
     QVector3D m_CameraLookAt;
     float m_Pitch = 0.0f;
     float m_Yaw = 0.0f;
-    float m_CameraDistance = 200.0f;
+    float m_CameraDistance = 100.0f;
 
     QMatrix4x4 m_ViewMatrix;
     QMatrix4x4 m_ProjectionMatrix;

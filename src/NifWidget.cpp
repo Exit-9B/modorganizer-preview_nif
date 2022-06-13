@@ -101,15 +101,19 @@ void NifWidget::initializeGL()
         m_GLShapes.emplace_back(m_NifFile.get(), shape, m_TextureManager.get());
     }
 
-#if 0
-    if (shapes.size() > 0) {
-        if (auto vertices = m_NifFile->GetVertsForShape(shapes[0])) {
+    float largestRadius = 0.0f;
+    for (auto& shape : shapes) {
+        if (auto vertices = m_NifFile->GetVertsForShape(shape)) {
             auto bounds = nifly::BoundingSphere(*vertices);
-            m_CameraDistance = bounds.radius * 5.0f;
-            m_CameraLookAt = QVector3D(bounds.center.x, bounds.center.y, bounds.center.z);
+
+            if (bounds.radius > largestRadius) {
+                largestRadius = bounds.radius;
+
+                m_CameraDistance = bounds.radius * 2.4f;
+                m_CameraLookAt = { -bounds.center.x, bounds.center.z, bounds.center.y };
+            }
         }
     }
-#endif
 
     updateCamera();
 

@@ -28,7 +28,7 @@ QString PreviewNif::description() const
 
 MOBase::VersionInfo PreviewNif::version() const
 {
-    return MOBase::VersionInfo(0, 0, 0, MOBase::VersionInfo::RELEASE_ALPHA);
+    return MOBase::VersionInfo(0, 0, 1, MOBase::VersionInfo::RELEASE_ALPHA);
 }
 
 QList<MOBase::PluginSetting> PreviewNif::settings() const
