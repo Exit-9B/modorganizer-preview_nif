@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.16)
+
+project(preview_nif)
+set(project_type plugin)
+set(enable_warnings OFF)
+
+if(DEFINED DEPENDENCIES_DIR)
+	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/project.cmake)
+else()
+	include(../cmake_common/project.cmake)
+endif()
+add_subdirectory(src)
+set(GLI_TEST_ENABLE OFF CACHE BOOL "Build gli unit tests")
+add_subdirectory(external/gli)
+add_subdirectory(external/nifly)
+target_link_libraries(${PROJECT_NAME} nifly gli)
