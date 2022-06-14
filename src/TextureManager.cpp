@@ -96,7 +96,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
         return nullptr;
     }
 
-    gli::gl GL(gli::gl::PROFILE_ES20);
+    gli::gl GL(gli::gl::PROFILE_GL32);
     const gli::gl::format format = GL.translate(texture.format(), texture.swizzles());
     GLenum target = GL.translate(texture.target());
 
@@ -115,19 +115,11 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     auto extent = texture.extent();
     const GLsizei faceTotal = texture.layers() * texture.faces();
 
-    switch (texture.target()) {
-    case gli::TARGET_2D:
-    case gli::TARGET_CUBE:
-        glTexture->setSize(extent.x, extent.y);
-        glTexture->setFormat(static_cast<QOpenGLTexture::TextureFormat>(format.Internal));
-        glTexture->allocateStorage(
-            static_cast<QOpenGLTexture::PixelFormat>(format.External),
-            static_cast<QOpenGLTexture::PixelType>(format.Type));
-        break;
-    default:
-        qWarning(qUtf8Printable(QObject::tr("Encountered unsupported texture target")));
-        return nullptr;
-    }
+    glTexture->setSize(extent.x, extent.y, extent.z);
+    glTexture->setFormat(static_cast<QOpenGLTexture::TextureFormat>(format.Internal));
+    glTexture->allocateStorage(
+        static_cast<QOpenGLTexture::PixelFormat>(format.External),
+        static_cast<QOpenGLTexture::PixelType>(format.Type));
 
     for (std::size_t layer = 0; layer < texture.layers(); layer++)
     for (std::size_t face = 0; face < texture.faces(); face++)
@@ -135,8 +127,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     {
         auto extent = texture.extent(level);
 
-        switch (texture.target()) {
-        case gli::TARGET_2D:
+        if (!gli::is_target_cube(texture.target())) {
             if (gli::is_compressed(texture.format())) {
                 glTexture->setCompressedData(
                     level,
@@ -152,8 +143,8 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
                     static_cast<QOpenGLTexture::PixelType>(format.Type),
                     texture.data(layer, face, level));
             }
-            break;
-        case gli::TARGET_CUBE:
+        }
+        else {
             if (gli::is_compressed(texture.format())) {
                 glTexture->setCompressedData(level, layer,
                     static_cast<QOpenGLTexture::CubeMapFace>(
@@ -171,9 +162,6 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
                     static_cast<QOpenGLTexture::PixelType>(format.Type),
                     texture.data(layer, face, level));
             }
-            break;
-        default:
-            return nullptr;
         }
     }
 

@@ -21,9 +21,5 @@
         <source>Failed to interface with managed game plugin</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Encountered unsupported texture target</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 </TS>
