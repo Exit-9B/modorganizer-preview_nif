@@ -157,7 +157,7 @@ OpenGLShape::OpenGLShape(
 
         specColor = convertColor(shader->GetSpecularColor());
         specStrength = shader->GetSpecularStrength();
-        specGlossiness = shader->GetGlossiness();
+        specGlossiness = qBound(0.0f, shader->GetGlossiness(), 128.0f);
         hasGlowMap = shader->HasGlowmap();
         glowColor = convertColor(shader->GetEmissiveColor());
         glowMult = shader->GetEmissiveMultiple();
@@ -264,6 +264,7 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("uvScale", uvScale);
     program->setUniformValue("uvOffset", uvOffset);
     program->setUniformValue("specColor", specColor);
+    program->setUniformValue("specStrength", specStrength);
     program->setUniformValue("specGlossiness", specGlossiness);
 
     program->setUniformValue("hasEmit", hasEmit);

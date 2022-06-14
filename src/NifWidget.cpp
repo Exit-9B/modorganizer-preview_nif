@@ -132,14 +132,14 @@ void NifWidget::paintGL()
         for (auto& shape : m_GLShapes) {
             auto binder = QOpenGLVertexArrayObject::Binder(shape.vertexArray);
 
-            auto modelMatrix = shape.modelMatrix;
+            auto& modelMatrix = shape.modelMatrix;
             auto modelViewMatrix = m_ViewMatrix * modelMatrix;
             auto mvpMatrix = m_ProjectionMatrix * modelViewMatrix;
 
+            m_Program->setUniformValue("worldMatrix", modelMatrix);
             m_Program->setUniformValue("modelViewMatrix", modelViewMatrix);
             m_Program->setUniformValue("normalMatrix", modelViewMatrix.normalMatrix());
             m_Program->setUniformValue("mvpMatrix", mvpMatrix);
-            m_Program->setUniformValue("worldMatrix", QMatrix4x4());
             m_Program->setUniformValue("lightDirection", QVector3D(0, 0, 1));
 
             shape.setupShaders(m_Program);

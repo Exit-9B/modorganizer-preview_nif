@@ -46,7 +46,7 @@ public:
     QMatrix4x4 modelMatrix;
     QColor specColor{ QColorConstants::White };
     float specStrength{ 1.0f };
-    float specGlossiness{ 30.0f };
+    float specGlossiness{ 1.0f };
 
     bool hasGlowMap{ false };
     QColor glowColor{ QColorConstants::White };
