@@ -9,6 +9,8 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
 
+#include <memory>
+
 TextureManager::TextureManager(MOBase::IOrganizer* moInfo) : m_MOInfo{ moInfo }
 {}
 
@@ -45,7 +47,6 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
         return m_ErrorTexture;
     }
 
-    QOpenGLTexture* texture = m_ErrorTexture;
     auto archives = gameArchives->archives(m_MOInfo->profile());
     for (auto it = archives.rbegin(); it != archives.rend(); ++it) {
         auto& archive = *it;
@@ -55,32 +56,38 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
             continue;
         }
 
-        auto bsa = bsa_create();
+        using bsa_ptr = std::unique_ptr<void, decltype(&bsa_free)>;
+        auto bsa = bsa_ptr(bsa_create(), bsa_free);
+
+        static_assert(sizeof(wchar_t) == 2, "Expected wchar_t to be 2 bytes");
 
         bsa_result_message_t result;
-        static_assert(sizeof(wchar_t) == 2, "Expected wchar_t to be 2 bytes");
         auto bsaPath_utf16 = reinterpret_cast<const wchar_t*>(bsaPath.utf16());
-        result = bsa_load_from_file(bsa, bsaPath_utf16);
+        result = bsa_load_from_file(bsa.get(), bsaPath_utf16);
         if (result.code == BSA_RESULT_EXCEPTION) {
-            bsa_free(bsa);
             continue;
         }
 
         auto texturePath_utf16 = reinterpret_cast<const wchar_t*>(texturePath.utf16());
-        auto result_buffer = bsa_extract_file_data_by_filename(bsa, texturePath_utf16);
+        auto result_buffer = bsa_extract_file_data_by_filename(bsa.get(), texturePath_utf16);
         if (result_buffer.message.code == BSA_RESULT_EXCEPTION) {
-            bsa_free(bsa);
             continue;
         }
 
-        auto& buffer = result_buffer.buffer;
-        texture = makeTexture(gli::load(static_cast<char*>(buffer.data), buffer.size));
+        auto buffer_free =
+            [&bsa](bsa_result_buffer_t* buffer) {
+                bsa_file_data_free(bsa.get(), *buffer);
+            };
+        using buffer_ptr = std::unique_ptr<bsa_result_buffer_t, decltype(buffer_free)>;
+        auto buffer = buffer_ptr(&result_buffer.buffer, buffer_free);
 
-        bsa_file_data_free(bsa, buffer);
-        bsa_free(bsa);
+        auto data = static_cast<char*>(buffer->data);
+        if (auto texture = makeTexture(gli::load(data, buffer->size))) {
+            return texture;
+        }
     }
 
-    return texture;
+    return m_ErrorTexture;
 }
 
 QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
@@ -123,8 +130,8 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     }
 
     for (std::size_t layer = 0; layer < texture.layers(); layer++)
-    for (std::size_t level = 0; level < texture.levels(); level++)
     for (std::size_t face = 0; face < texture.faces(); face++)
+    for (std::size_t level = 0; level < texture.levels(); level++)
     {
         auto extent = texture.extent(level);
 
@@ -169,6 +176,8 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
             return nullptr;
         }
     }
+
+    glTexture->release();
 
     return glTexture;
 }
