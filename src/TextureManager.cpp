@@ -190,6 +190,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     QOpenGLTexture* glTexture = new QOpenGLTexture(static_cast<QOpenGLTexture::Target>(target));
     glTexture->create();
     glTexture->bind();
+    glTexture->setMipLevels(texture.levels());
     glTexture->setMipBaseLevel(0);
     glTexture->setMipMaxLevel(texture.levels() - 1);
     glTexture->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
