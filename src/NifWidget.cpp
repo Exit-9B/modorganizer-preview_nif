@@ -17,10 +17,16 @@ NifWidget::NifWidget(
       m_MOInfo{ moInfo },
       m_TextureManager{ std::make_unique<TextureManager>(moInfo) }
 {
+    QSurfaceFormat format;
+    format.setVersion(2, 1);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+
     if (debugContext) {
-        setFormat({ QSurfaceFormat::DebugContext });
+        format.setOption(QSurfaceFormat::DebugContext);
         m_Logger = new QOpenGLDebugLogger(this);
     }
+
+    setFormat(format);
 }
 
 void NifWidget::mousePressEvent(QMouseEvent* event)
@@ -138,6 +144,7 @@ void NifWidget::paintGL()
 
             m_Program->setUniformValue("worldMatrix", modelMatrix);
             m_Program->setUniformValue("modelViewMatrix", modelViewMatrix);
+            m_Program->setUniformValue("modelViewMatrixInverse", modelViewMatrix.inverted());
             m_Program->setUniformValue("normalMatrix", modelViewMatrix.normalMatrix());
             m_Program->setUniformValue("mvpMatrix", mvpMatrix);
             m_Program->setUniformValue("lightDirection", QVector3D(0, 0, 1));

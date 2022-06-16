@@ -1,4 +1,4 @@
-#version 150
+#version 120
 
 uniform sampler2D BaseMap;
 uniform sampler2D NormalMap;
@@ -9,7 +9,7 @@ uniform sampler2D BacklightMap;
 uniform sampler2D EnvironmentMap;
 uniform samplerCube CubeMap;
 
-uniform vec3 specColor;
+uniform vec4 specColor;
 uniform float specStrength;
 uniform float specGlossiness;
 
@@ -38,20 +38,20 @@ uniform float lightingEffect2;
 
 uniform float envReflection;
 
-uniform mat4 modelViewMatrix;
+uniform mat4 modelViewMatrixInverse;
 uniform mat4 worldMatrix;
 
-in vec2 TexCoord;
-in vec3 LightDir;
-in vec3 ViewDir;
+varying vec2 TexCoord;
+varying vec3 LightDir;
+varying vec3 ViewDir;
 
-in vec4 A;
-in vec4 C;
-in vec4 D;
+varying vec4 A;
+varying vec4 C;
+varying vec4 D;
 
-in vec3 N;
-in vec3 t;
-in vec3 b;
+varying vec3 N;
+varying vec3 t;
+varying vec3 b;
 
 vec3 tonemap(vec3 x)
 {
@@ -77,13 +77,13 @@ void main( void )
     vec3 E = normalize(ViewDir);
 
     if ( hasHeightMap ) {
-        float height = texture( HeightMap, offset ).r;
+        float height = texture2D( HeightMap, offset ).r;
         offset += E.xy * (height * 0.08 - 0.04);
     }
 
-    vec4 baseMap = texture( BaseMap, offset );
-    vec4 normalMap = texture( NormalMap, offset );
-    vec4 glowMap = texture( GlowMap, offset );
+    vec4 baseMap = texture2D( BaseMap, offset );
+    vec4 normalMap = texture2D( NormalMap, offset );
+    vec4 glowMap = texture2D( GlowMap, offset );
 
     vec3 normal = normalize(normalMap.rgb * 2.0 - 1.0);
 
@@ -98,7 +98,7 @@ void main( void )
 
     vec3 reflected = reflect( -E, normal );
     vec3 reflectedVS = b * reflected.x + t * reflected.y + N * reflected.z;
-    vec3 reflectedWS = vec3( worldMatrix * (inverse(modelViewMatrix) * vec4( reflectedVS, 0.0 )) );
+    vec3 reflectedWS = vec3( worldMatrix * (modelViewMatrixInverse * vec4( reflectedVS, 0.0 )) );
 
 
     vec4 color;
@@ -108,11 +108,11 @@ void main( void )
 
     // Environment
     if ( hasCubeMap ) {
-        vec4 cube = texture( CubeMap, reflectedWS );
+        vec4 cube = textureCube( CubeMap, reflectedWS );
         cube.rgb *= envReflection;
 
         if ( hasEnvMask ) {
-            vec4 env = texture( EnvironmentMap, offset );
+            vec4 env = texture2D( EnvironmentMap, offset );
             cube.rgb *= env.r;
         } else {
             cube.rgb *= normalMap.a;
@@ -133,12 +133,12 @@ void main( void )
     }
 
     // Specular
-    vec3 spec = clamp( specColor * specStrength * normalMap.a * pow(NdotH, specGlossiness), 0.0, 1.0 );
+    vec3 spec = clamp( specColor.rgb * specStrength * normalMap.a * pow(NdotH, specGlossiness), 0.0, 1.0 );
     spec *= D.rgb;
 
     vec3 backlight = vec3(0.0);
     if ( hasBacklight ) {
-        backlight = texture( BacklightMap, offset ).rgb;
+        backlight = texture2D( BacklightMap, offset ).rgb;
         backlight *= NdotNegL;
 
         emissive += backlight * D.rgb;
@@ -146,7 +146,7 @@ void main( void )
 
     vec4 mask = vec4(0.0);
     if ( hasRimlight || hasSoftlight ) {
-        mask = texture( LightMask, offset );
+        mask = texture2D( LightMask, offset );
     }
 
     vec3 rim = vec3(0.0);

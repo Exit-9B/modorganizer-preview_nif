@@ -1,4 +1,4 @@
-#version 150
+#version 120
 
 uniform mat4 modelViewMatrix;
 uniform mat4 mvpMatrix;
@@ -7,25 +7,25 @@ uniform vec3 lightDirection;
 uniform vec4 ambientColor;
 uniform vec4 diffuseColor;
 
-in vec3 position;
-in vec3 normal;
-in vec3 tangent;
-in vec3 bitangent;
-in vec2 texCoord;
-in vec4 color;
+attribute vec3 position;
+attribute vec3 normal;
+attribute vec3 tangent;
+attribute vec3 bitangent;
+attribute vec2 texCoord;
+attribute vec4 color;
 
-out vec2 TexCoord;
-out vec3 LightDir;
-out vec3 ViewDir;
+varying vec2 TexCoord;
+varying vec3 LightDir;
+varying vec3 ViewDir;
 
-out vec3 N;
-out vec3 t;
-out vec3 b;
-out vec3 v;
+varying vec3 N;
+varying vec3 t;
+varying vec3 b;
+varying vec3 v;
 
-out vec4 A;
-out vec4 C;
-out vec4 D;
+varying vec4 A;
+varying vec4 C;
+varying vec4 D;
 
 void main( void )
 {
