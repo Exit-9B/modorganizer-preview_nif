@@ -9,6 +9,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QWidget>
 
+#include "ShaderManager.h"
 #include "TextureManager.h"
 
 enum TextureSlot : std::size_t
@@ -39,6 +40,7 @@ public:
     static QColor convertColor(nifly::Color4 color);
     static QMatrix4x4 convertTransform(nifly::MatTransform transform);
 
+    ShaderManager::ShaderType shaderType = ShaderManager::SkDefault;
     QOpenGLVertexArrayObject* vertexArray = nullptr;
 
     QOpenGLBuffer* vertexBuffer = nullptr;

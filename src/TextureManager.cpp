@@ -15,6 +15,42 @@
 TextureManager::TextureManager(MOBase::IOrganizer* moInfo) : m_MOInfo{ moInfo }
 {}
 
+void TextureManager::cleanup()
+{
+    for (auto& [path, texture] : m_Textures) {
+        if (texture && texture != m_ErrorTexture) {
+            texture->destroy();
+            delete texture;
+        }
+    }
+
+    m_Textures.clear();
+
+    if (m_ErrorTexture) {
+        m_ErrorTexture->destroy();
+        delete m_ErrorTexture;
+        m_ErrorTexture = nullptr;
+    }
+
+    if (m_BlackTexture) {
+        m_BlackTexture->destroy();
+        delete m_ErrorTexture;
+        m_BlackTexture = nullptr;
+    }
+
+    if (m_WhiteTexture) {
+        m_WhiteTexture->destroy();
+        delete m_ErrorTexture;
+        m_WhiteTexture = nullptr;
+    }
+
+    if (m_FlatNormalTexture) {
+        m_FlatNormalTexture->destroy();
+        delete m_ErrorTexture;
+        m_FlatNormalTexture = nullptr;
+    }
+}
+
 QOpenGLTexture* TextureManager::getTexture(const std::string& texturePath)
 {
     return getTexture(QString::fromStdString(texturePath));
@@ -26,11 +62,66 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
         return nullptr;
     }
 
+    auto lower = texturePath.toLower();
+
+    auto cached = m_Textures.find(lower);
+    if (cached != m_Textures.end()) {
+        return cached->second;
+    }
+
+    auto texture = loadTexture(texturePath);
+
+    m_Textures[lower] = texture;
+    return texture;
+}
+
+QOpenGLTexture* TextureManager::getErrorTexture()
+{
+    if (!m_ErrorTexture) {
+        m_ErrorTexture = makeSolidColor({ 1.0f, 0.0f, 1.0f, 1.0f });
+    }
+
+    return m_ErrorTexture;
+}
+
+QOpenGLTexture* TextureManager::getBlackTexture()
+{
+    if (!m_BlackTexture) {
+        m_BlackTexture = makeSolidColor({0.0f, 0.0f, 0.0f, 1.0f });
+    }
+
+    return m_BlackTexture;
+}
+
+QOpenGLTexture* TextureManager::getWhiteTexture()
+{
+    if (!m_WhiteTexture) {
+        m_WhiteTexture = makeSolidColor({1.0f, 1.0f, 1.0f, 1.0f });
+    }
+
+    return m_WhiteTexture;
+}
+
+QOpenGLTexture* TextureManager::getFlatNormalTexture()
+{
+    if (!m_FlatNormalTexture) {
+        m_FlatNormalTexture = makeSolidColor({0.5f, 0.5f, 1.0f, 0.0f });
+    }
+
+    return m_FlatNormalTexture;
+}
+
+QOpenGLTexture* TextureManager::loadTexture(QString texturePath)
+{
+    if (texturePath.isEmpty()) {
+        return nullptr;
+    }
+
     auto game = m_MOInfo->managedGame();
 
     if (!game) {
         qCritical(qUtf8Printable(QObject::tr("Failed to interface with managed game plugin")));
-        return m_ErrorTexture;
+        return getErrorTexture();
     }
 
     auto realPath = resolvePath(game, texturePath);
@@ -40,7 +131,7 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
 
     auto gameArchives = game->feature<DataArchives>();
     if (!gameArchives) {
-        return m_ErrorTexture;
+        return getErrorTexture();
     }
 
     auto archives = gameArchives->archives(m_MOInfo->profile());
@@ -83,34 +174,7 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
         }
     }
 
-    return m_ErrorTexture;
-}
-
-QOpenGLTexture* TextureManager::getBlackTexture()
-{
-    if (!m_BlackTexture) {
-        m_BlackTexture = makeSolidColor({0.0f, 0.0f, 0.0f, 1.0f });
-    }
-
-    return m_BlackTexture;
-}
-
-QOpenGLTexture* TextureManager::getWhiteTexture()
-{
-    if (!m_WhiteTexture) {
-        m_WhiteTexture = makeSolidColor({1.0f, 1.0f, 1.0f, 1.0f });
-    }
-
-    return m_WhiteTexture;
-}
-
-QOpenGLTexture* TextureManager::getFlatNormalTexture()
-{
-    if (!m_FlatNormalTexture) {
-        m_FlatNormalTexture = makeSolidColor({0.0f, 0.0f, 0.5f, 0.0f });
-    }
-
-    return m_FlatNormalTexture;
+    return getErrorTexture();
 }
 
 QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)

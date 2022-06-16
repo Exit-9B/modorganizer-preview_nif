@@ -15,7 +15,8 @@ NifWidget::NifWidget(
     : QOpenGLWidget(parent, f),
       m_NifFile{ nifFile },
       m_MOInfo{ moInfo },
-      m_TextureManager{ std::make_unique<TextureManager>(moInfo) }
+      m_TextureManager{ std::make_unique<TextureManager>(moInfo) },
+      m_ShaderManager{ std::make_unique<ShaderManager>(moInfo) }
 {
     QSurfaceFormat format;
     format.setVersion(2, 1);
@@ -93,14 +94,14 @@ void NifWidget::initializeGL()
             });
     }
 
-    auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
     connect(
-        QOpenGLContext::currentContext(),
+        context(),
         &QOpenGLContext::aboutToBeDestroyed,
         this,
-        &NifWidget::cleanup);
+        &NifWidget::cleanup,
+        Qt::DirectConnection);
 
-    initProgram();
+    auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
 
     auto shapes = m_NifFile->GetShapes();
     for (auto& shape : shapes) {
@@ -134,39 +135,37 @@ void NifWidget::paintGL()
     auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (m_Program->bind()) {
-        for (auto& shape : m_GLShapes) {
+    for (auto& shape : m_GLShapes) {
+        auto program = m_ShaderManager->getProgram(shape.shaderType);
+        if (program && program->bind()) {
             auto binder = QOpenGLVertexArrayObject::Binder(shape.vertexArray);
 
             auto& modelMatrix = shape.modelMatrix;
             auto modelViewMatrix = m_ViewMatrix * modelMatrix;
             auto mvpMatrix = m_ProjectionMatrix * modelViewMatrix;
 
-            m_Program->setUniformValue("worldMatrix", modelMatrix);
-            m_Program->setUniformValue("modelViewMatrix", modelViewMatrix);
-            m_Program->setUniformValue("modelViewMatrixInverse", modelViewMatrix.inverted());
-            m_Program->setUniformValue("normalMatrix", modelViewMatrix.normalMatrix());
-            m_Program->setUniformValue("mvpMatrix", mvpMatrix);
-            m_Program->setUniformValue("lightDirection", QVector3D(0, 0, 1));
+            program->setUniformValue("worldMatrix", modelMatrix);
+            program->setUniformValue("modelViewMatrix", modelViewMatrix);
+            program->setUniformValue("modelViewMatrixInverse", modelViewMatrix.inverted());
+            program->setUniformValue("normalMatrix", modelViewMatrix.normalMatrix());
+            program->setUniformValue("mvpMatrix", mvpMatrix);
+            program->setUniformValue("lightDirection", QVector3D(0, 0, 1));
 
-            shape.setupShaders(m_Program);
+            shape.setupShaders(program);
 
             if (shape.indexBuffer && shape.indexBuffer->isCreated()) {
                 shape.indexBuffer->bind();
                 f->glDrawElements(GL_TRIANGLES, shape.elements, GL_UNSIGNED_SHORT, nullptr);
                 shape.indexBuffer->release();
             }
+
+            program->release();
         }
-        m_Program->release();
     }
 }
 
 void NifWidget::resizeGL(int w, int h)
 {
-    auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
-
-    f->glViewport(0, 0, w, h);
-
     QMatrix4x4 m;
     m.perspective(40.0f, static_cast<float>(w) / h, 0.1f, 10000.0f);
 
@@ -177,29 +176,14 @@ void NifWidget::resizeGL(int w, int h)
 
 void NifWidget::cleanup()
 {
+    makeCurrent();
+
     for (auto& shape : m_GLShapes) {
         shape.destroy();
     }
     m_GLShapes.clear();
-}
 
-void NifWidget::initProgram()
-{
-    auto game = m_MOInfo->managedGame();
-    auto dataPath = MOBase::IOrganizer::getPluginDataPath();
-    auto vertexShader = dataPath + "/shaders/sk_default.vert";
-    auto fragmentShader = dataPath + "/shaders/sk_default.frag";
-
-    m_Program = new QOpenGLShaderProgram(this);
-    m_Program->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexShader);
-    m_Program->addShaderFromSourceFile(QOpenGLShader::Fragment, fragmentShader);
-    m_Program->bindAttributeLocation("position", 0);
-    m_Program->bindAttributeLocation("normal", 1);
-    m_Program->bindAttributeLocation("tangent", 2);
-    m_Program->bindAttributeLocation("bitangent", 3);
-    m_Program->bindAttributeLocation("texCoord", 4);
-    m_Program->bindAttributeLocation("color", 5);
-    m_Program->link();
+    m_TextureManager->cleanup();
 }
 
 void NifWidget::updateCamera()

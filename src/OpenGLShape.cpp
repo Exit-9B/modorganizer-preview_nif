@@ -202,34 +202,42 @@ void OpenGLShape::destroy()
 {
     if (vertexBuffer) {
         vertexBuffer->destroy();
+        delete vertexBuffer;
     }
 
     if (normalBuffer) {
         normalBuffer->destroy();
+        delete normalBuffer;
     }
 
     if (tangentBuffer) {
         tangentBuffer->destroy();
+        delete tangentBuffer;
     }
 
     if (bitangentBuffer) {
         bitangentBuffer->destroy();
+        delete bitangentBuffer;
     }
 
     if (texCoordBuffer) {
         texCoordBuffer->destroy();
+        delete texCoordBuffer;
     }
 
     if (colorBuffer) {
         colorBuffer->destroy();
+        delete colorBuffer;
     }
 
     if (indexBuffer) {
         indexBuffer->destroy();
+        delete indexBuffer;
     }
 
     if (vertexArray) {
         vertexArray->destroy();
+        vertexArray->deleteLater();
     }
 }
 

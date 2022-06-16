@@ -11,6 +11,7 @@
 #include <QOpenGLShaderProgram>
 
 #include "OpenGLShape.h"
+#include "ShaderManager.h"
 #include "TextureManager.h"
 
 #include <memory>
@@ -38,17 +39,16 @@ protected:
 
 private:
     void cleanup();
-    void initProgram();
     void updateCamera();
 
     std::shared_ptr<nifly::NifFile> m_NifFile;
     MOBase::IOrganizer* m_MOInfo = nullptr;
 
     std::unique_ptr<TextureManager> m_TextureManager;
+    std::unique_ptr<ShaderManager> m_ShaderManager;
 
     QOpenGLDebugLogger* m_Logger = nullptr;
 
-    QOpenGLShaderProgram* m_Program = nullptr;
     std::vector<OpenGLShape> m_GLShapes;
 
     QVector3D m_CameraLookAt;
