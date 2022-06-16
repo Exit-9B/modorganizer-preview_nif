@@ -63,7 +63,7 @@ QWidget* PreviewNif::genFilePreview(const QString& fileName, const QSize& maxSiz
 
     layout->addWidget(makeLabel(nifFile.get()), 1, 0, 1, 1);
 
-    auto nifWidget = new NifWidget(nifFile, m_MOInfo, true);
+    auto nifWidget = new NifWidget(nifFile, m_MOInfo);
     layout->addWidget(nifWidget, 0, 0, 1, 1);
 
     auto widget = new QWidget();
