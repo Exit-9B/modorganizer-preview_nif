@@ -63,7 +63,7 @@ void NifWidget::mouseMoveEvent(QMouseEvent* event)
     case Qt::RightButton:
     {
         if (event->modifiers() == Qt::ShiftModifier) {
-            m_CameraDistance += delta.y() * 0.5f;
+            m_CameraDistance += delta.y() * 0.1f;
         }
     } break;
     }
