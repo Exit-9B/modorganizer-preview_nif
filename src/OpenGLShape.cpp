@@ -150,7 +150,25 @@ OpenGLShape::OpenGLShape(
                     textures[i] = textureManager->getTexture(texturePath);
                 }
                 else {
-                    textures[i] = nullptr;
+                    switch (i) {
+                    case TextureSlot::BaseMap:
+                        textures[i] = textureManager->getBlackTexture();
+                        break;
+                    case TextureSlot::NormalMap:
+                        textures[i] = textureManager->getFlatNormalTexture();
+                        break;
+                    case TextureSlot::GlowMap:
+                        if (shader->HasGlowmap()) {
+                            textures[i] = textureManager->getBlackTexture();
+                        }
+                        else {
+                            textures[i] = textureManager->getWhiteTexture();
+                        }
+                        break;
+                    default:
+                        textures[i] = nullptr;
+                        break;
+                    }
                 }
             }
         }

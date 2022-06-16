@@ -8,16 +8,12 @@
 #include <libbsarch.h>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
+#include <QVector4D>
 
 #include <memory>
 
 TextureManager::TextureManager(MOBase::IOrganizer* moInfo) : m_MOInfo{ moInfo }
 {}
-
-void TextureManager::initialize()
-{
-    // TODO: Load default textures
-}
 
 QOpenGLTexture* TextureManager::getTexture(const std::string& texturePath)
 {
@@ -88,6 +84,33 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
     }
 
     return m_ErrorTexture;
+}
+
+QOpenGLTexture* TextureManager::getBlackTexture()
+{
+    if (!m_BlackTexture) {
+        m_BlackTexture = makeSolidColor({0.0f, 0.0f, 0.0f, 1.0f });
+    }
+
+    return m_BlackTexture;
+}
+
+QOpenGLTexture* TextureManager::getWhiteTexture()
+{
+    if (!m_WhiteTexture) {
+        m_WhiteTexture = makeSolidColor({1.0f, 1.0f, 1.0f, 1.0f });
+    }
+
+    return m_WhiteTexture;
+}
+
+QOpenGLTexture* TextureManager::getFlatNormalTexture()
+{
+    if (!m_FlatNormalTexture) {
+        m_FlatNormalTexture = makeSolidColor({0.0f, 0.0f, 0.5f, 0.0f });
+    }
+
+    return m_FlatNormalTexture;
 }
 
 QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
@@ -164,6 +187,23 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
             }
         }
     }
+
+    glTexture->release();
+
+    return glTexture;
+}
+
+QOpenGLTexture* TextureManager::makeSolidColor(QVector4D color)
+{
+    QOpenGLTexture* glTexture = new QOpenGLTexture(QOpenGLTexture::Target2D);
+    glTexture->create();
+    glTexture->bind();
+
+    glTexture->setSize(1, 1);
+    glTexture->setFormat(QOpenGLTexture::RGBA32F);
+    glTexture->allocateStorage(QOpenGLTexture::RGBA, QOpenGLTexture::Float32);
+
+    glTexture->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, &color);
 
     glTexture->release();
 

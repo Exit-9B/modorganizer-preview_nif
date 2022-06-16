@@ -11,6 +11,18 @@
 
 #include "TextureManager.h"
 
+enum TextureSlot : std::size_t
+{
+    BaseMap = 0,
+    NormalMap = 1,
+    GlowMap = 2,
+    LightMask = 2,
+    HeightMap = 3,
+    EnvironmentMap = 4,
+    EnvironmentMask = 5,
+    BacklightMap = 7,
+};
+
 struct OpenGLShape
 {
 public:
@@ -44,29 +56,29 @@ public:
     QOpenGLTexture* textures[13] { nullptr };
 
     QMatrix4x4 modelMatrix;
-    QColor specColor{ QColorConstants::White };
-    float specStrength{ 1.0f };
-    float specGlossiness{ 1.0f };
+    QColor specColor = QColorConstants::White;
+    float specStrength = 1.0f ;
+    float specGlossiness = 1.0f;
 
-    bool hasGlowMap{ false };
-    QColor glowColor{ QColorConstants::White };
-    float glowMult{ 1.0f };
+    bool hasGlowMap = false;
+    QColor glowColor = QColorConstants::White;
+    float glowMult = 1.0f;
 
-    float alpha{ 1.0f };
+    float alpha = 1.0f;
     QColor tintColor;
 
     QVector2D uvScale{ 1.0f, 1.0f };
     QVector2D uvOffset{ 0.0f, 0.0f };
 
-    bool hasEmit{ false };
-    bool hasSoftlight{ false };
-    bool hasBacklight{ false };
-    bool hasRimlight{ false };
-    bool hasTintColor{ false };
+    bool hasEmit = false;
+    bool hasSoftlight = false;
+    bool hasBacklight = false;
+    bool hasRimlight = false;
+    bool hasTintColor = false;
 
-    float lightingEffect1{ 0.3f };
-    float lightingEffect2{ 2.0f };
-    float envReflection{ 1.0f };
+    float lightingEffect1 = 0.3f;
+    float lightingEffect2 = 2.0f;
+    float envReflection = 1.0f;
 
-    float alphaThreshold{ 0.0f };
+    float alphaThreshold = 0.0f;
 };
