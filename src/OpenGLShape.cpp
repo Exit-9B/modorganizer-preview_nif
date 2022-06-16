@@ -10,6 +10,33 @@ OpenGLShape::OpenGLShape(
 {
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
 
+    auto shader = nifFile->GetShader(niShape);
+    auto& version = nifFile->GetHeader().GetVersion();
+    if (version.IsFO4()) {
+        if (shader->GetBlockName() == "BSEffectShaderProperty") {
+            shaderType = ShaderManager::FO4EffectShader;
+        }
+        else {
+            shaderType = ShaderManager::FO4Default;
+        }
+    }
+    else {
+        if (shader->GetBlockName() == "BSEffectShaderProperty") {
+            shaderType = ShaderManager::SKEffectShader;
+        }
+        else {
+            if (shader->IsModelSpace()) {
+                shaderType = ShaderManager::SKMSN;
+            }
+            else if (shader->bslspShaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
+                shaderType = ShaderManager::SKMultilayer;
+            }
+            else {
+                shaderType = ShaderManager::SKDefault;
+            }
+        }
+    }
+
     vertexArray = new QOpenGLVertexArrayObject();
     vertexArray->create();
     auto binder = QOpenGLVertexArrayObject::Binder(vertexArray);
@@ -136,10 +163,7 @@ OpenGLShape::OpenGLShape(
         indexBuffer->release();
     }
 
-    if (niShape->HasShaderProperty()) {
-        auto shaderRef = niShape->ShaderPropertyRef();
-        auto shader = nifFile->GetHeader().GetBlock(shaderRef);
-
+    if (shader) {
         if (shader->HasTextureSet()) {
             auto textureSetRef = shader->TextureSetRef();
             auto textureSet = nifFile->GetHeader().GetBlock(textureSetRef);
@@ -173,14 +197,14 @@ OpenGLShape::OpenGLShape(
             }
         }
 
-        specColor = convertColor(shader->GetSpecularColor());
+        specColor = convertVector3(shader->GetSpecularColor());
         specStrength = shader->GetSpecularStrength();
         specGlossiness = qBound(0.0f, shader->GetGlossiness(), 128.0f);
         hasGlowMap = shader->HasGlowmap();
         glowColor = convertColor(shader->GetEmissiveColor());
         glowMult = shader->GetEmissiveMultiple();
         alpha = shader->GetAlpha();
-        tintColor = QColorConstants::White;
+        tintColor = { 1.0f, 1.0f, 1.0f };
         uvScale = convertVector2(shader->GetUVScale());
         uvOffset = convertVector2(shader->GetUVOffset());
         hasEmit = shader->IsEmissive();
@@ -287,6 +311,7 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("diffuseColor", QVector4D(1.0f, 1.0f, 1.0f, 1.0f));
 
     program->setUniformValue("alpha", alpha);
+    program->setUniformValue("tintColor", tintColor);
     program->setUniformValue("uvScale", uvScale);
     program->setUniformValue("uvOffset", uvOffset);
     program->setUniformValue("specColor", specColor);
@@ -313,9 +338,9 @@ QVector2D OpenGLShape::convertVector2(nifly::Vector2 vector)
     return { vector.u, vector.v };
 }
 
-QColor OpenGLShape::convertColor(nifly::Vector3 color)
+QVector3D OpenGLShape::convertVector3(nifly::Vector3 vector)
 {
-    return QColor::fromRgbF(color.x, color.y, color.z);
+    return { vector.x, vector.y, vector.z };
 }
 
 QColor OpenGLShape::convertColor(nifly::Color4 color)

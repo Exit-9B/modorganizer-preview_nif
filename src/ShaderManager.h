@@ -8,11 +8,12 @@ class ShaderManager
 public:
     enum ShaderType
     {
-        SkDefault,
-        SkMsn,
-        SkEffectShader,
-        Fo4Default,
-        Fo4EffectShader,
+        SKDefault,
+        SKMSN,
+        SKMultilayer,
+        SKEffectShader,
+        FO4Default,
+        FO4EffectShader,
 
         SHADER_COUNT,
     };

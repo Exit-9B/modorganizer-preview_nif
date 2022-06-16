@@ -145,6 +145,7 @@ void NifWidget::paintGL()
             auto mvpMatrix = m_ProjectionMatrix * modelViewMatrix;
 
             program->setUniformValue("worldMatrix", modelMatrix);
+            program->setUniformValue("viewMatrix", m_ViewMatrix);
             program->setUniformValue("modelViewMatrix", modelViewMatrix);
             program->setUniformValue("modelViewMatrixInverse", modelViewMatrix.inverted());
             program->setUniformValue("normalMatrix", modelViewMatrix.normalMatrix());

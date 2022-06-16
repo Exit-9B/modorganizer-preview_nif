@@ -16,21 +16,42 @@ QOpenGLShaderProgram* ShaderManager::getProgram(ShaderType type)
 
 QOpenGLShaderProgram* ShaderManager::loadProgram(ShaderType type)
 {
-    QString name;
+    QString vert;
+    QString frag;
 
     switch (type) {
-    case SkDefault:
-        name = "sk_default";
+    case SKDefault:
+        vert = "sk_default.vert";
+        frag = "sk_default.frag";
+        break;
+    case SKMSN:
+        vert = "sk_msn.vert";
+        frag = "sk_msn.frag";
+        break;
+    case SKMultilayer:
+        vert = "sk_default.vert";
+        frag = "sk_multilayer.frag";
+        break;
+    case SKEffectShader:
+        vert = "sk_effectshader.vert";
+        frag = "sk_multilayer.frag";
+        break;
+    case FO4Default:
+        vert = "fo4_default.vert";
+        frag = "fo4_default.frag";
+        break;
+    case FO4EffectShader:
+        vert = "fo4_effectshader.vert";
+        frag = "fo4_effectshader.frag";
         break;
     default:
-        name = "sk_default";
-        break;
+        return nullptr;
     }
 
     auto game = m_MOInfo->managedGame();
     auto dataPath = MOBase::IOrganizer::getPluginDataPath();
-    auto vertexShader = QString("%1/shaders/%2.vert").arg(dataPath).arg(name);
-    auto fragmentShader = QString("%1/shaders/%2.frag").arg(dataPath).arg(name);
+    auto vertexShader = QString("%1/shaders/%2").arg(dataPath).arg(vert);
+    auto fragmentShader = QString("%1/shaders/%2").arg(dataPath).arg(frag);
 
     auto program = new QOpenGLShaderProgram(QOpenGLContext::currentContext());
     program->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexShader);

@@ -36,11 +36,11 @@ public:
     void setupShaders(QOpenGLShaderProgram* program);
 
     static QVector2D convertVector2(nifly::Vector2 vector);
-    static QColor convertColor(nifly::Vector3 color);
+    static QVector3D convertVector3(nifly::Vector3 vector);
     static QColor convertColor(nifly::Color4 color);
     static QMatrix4x4 convertTransform(nifly::MatTransform transform);
 
-    ShaderManager::ShaderType shaderType = ShaderManager::SkDefault;
+    ShaderManager::ShaderType shaderType = ShaderManager::SKDefault;
     QOpenGLVertexArrayObject* vertexArray = nullptr;
 
     QOpenGLBuffer* vertexBuffer = nullptr;
@@ -58,7 +58,7 @@ public:
     QOpenGLTexture* textures[13] { nullptr };
 
     QMatrix4x4 modelMatrix;
-    QColor specColor = QColorConstants::White;
+    QVector3D specColor{ 1.0f, 1.0f, 1.0f };
     float specStrength = 1.0f ;
     float specGlossiness = 1.0f;
 
@@ -67,7 +67,7 @@ public:
     float glowMult = 1.0f;
 
     float alpha = 1.0f;
-    QColor tintColor;
+    QVector3D tintColor{ 1.0f, 1.0f, 1.0f };
 
     QVector2D uvScale{ 1.0f, 1.0f };
     QVector2D uvOffset{ 0.0f, 0.0f };
