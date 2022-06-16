@@ -3,6 +3,7 @@
 #include "PreviewNif.h"
 #include "NifWidget.h"
 
+#include <QGridLayout>
 #include <filesystem>
 
 bool PreviewNif::init(MOBase::IOrganizer* moInfo)
@@ -56,5 +57,35 @@ QWidget* PreviewNif::genFilePreview(const QString& fileName, const QSize& maxSiz
         return nullptr;
     }
 
-    return new NifWidget(nifFile, m_MOInfo, true);
+    auto layout = new QGridLayout();
+    layout->setRowStretch(0, 1);
+    layout->setColumnStretch(0, 1);
+
+    layout->addWidget(makeLabel(nifFile.get()), 1, 0, 1, 1);
+
+    auto nifWidget = new NifWidget(nifFile, m_MOInfo, true);
+    layout->addWidget(nifWidget, 0, 0, 1, 1);
+
+    auto widget = new QWidget();
+    widget->setLayout(layout);
+    return widget;
+}
+
+QLabel* PreviewNif::makeLabel(nifly::NifFile* nifFile) const
+{
+    int shapes = 0;
+    int faces = 0;
+    int verts = 0;
+
+    for (auto& shape : nifFile->GetShapes()) {
+        shapes++;
+        faces += shape->GetNumTriangles();
+        verts += shape->GetNumVertices();
+    }
+
+    auto text = tr("Verts: %1 | Faces: %2 | Shapes: %3").arg(verts).arg(faces).arg(shapes);
+    auto label = new QLabel(text);
+    label->setWordWrap(true);
+    label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    return label;
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <ipluginpreview.h>
+#include <QLabel>
+#include <NifFile.hpp>
 
 class PreviewNif : public MOBase::IPluginPreview
 {
@@ -27,5 +29,7 @@ public:
     QWidget* genFilePreview(const QString& fileName, const QSize& maxSize) const override;
 
 private:
+    QLabel* makeLabel(nifly::NifFile* nifFile) const;
+
     MOBase::IOrganizer* m_MOInfo;
 };

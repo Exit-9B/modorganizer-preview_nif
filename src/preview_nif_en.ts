@@ -14,6 +14,10 @@
         <source>Failed to load file: %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Verts: %1 | Faces: %2 | Shapes: %3</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
