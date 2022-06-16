@@ -137,7 +137,7 @@ void NifWidget::paintGL()
 
     for (auto& shape : m_GLShapes) {
         auto program = m_ShaderManager->getProgram(shape.shaderType);
-        if (program && program->bind()) {
+        if (program && program->isLinked() && program->bind()) {
             auto binder = QOpenGLVertexArrayObject::Binder(shape.vertexArray);
 
             auto& modelMatrix = shape.modelMatrix;
