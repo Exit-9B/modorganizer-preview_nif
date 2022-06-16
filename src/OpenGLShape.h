@@ -22,6 +22,7 @@ enum TextureSlot : std::size_t
     EnvironmentMap = 4,
     EnvironmentMask = 5,
     BacklightMap = 7,
+    SpecularMap = 7,
 };
 
 struct OpenGLShape

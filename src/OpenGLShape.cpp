@@ -303,6 +303,8 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     }
 
     program->setUniformValue("BacklightMap", 8);
+    program->setUniformValue("SpecularMap", 8);
+    program->setUniformValue("hasSpecularMap", textures[7] != nullptr);
     if (textures[7]) {
         textures[7]->bind(8);
     }
