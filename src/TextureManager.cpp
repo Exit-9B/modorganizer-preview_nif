@@ -6,6 +6,7 @@
 
 #include <gli/gli.hpp>
 #include <libbsarch.h>
+
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
 #include <QVector4D>
@@ -187,7 +188,9 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     const gli::gl::format format = GL.translate(texture.format(), texture.swizzles());
     GLenum target = GL.translate(texture.target());
 
+    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
     QOpenGLTexture* glTexture = new QOpenGLTexture(static_cast<QOpenGLTexture::Target>(target));
+
     glTexture->create();
     glTexture->bind();
     glTexture->setMipLevels(texture.levels());
@@ -215,41 +218,81 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     {
         auto extent = texture.extent(level);
 
-        if (!gli::is_target_cube(texture.target())) {
+        switch (texture.target()) {
+        case gli::TARGET_1D:
             if (gli::is_compressed(texture.format())) {
-                glTexture->setCompressedData(
+                f->glCompressedTexSubImage1D(
+                    glTexture->target(),
                     level,
-                    layer,
+                    0,
+                    extent.x,
+                    format.Internal,
                     texture.size(level),
                     texture.data(layer, face, level));
             }
             else {
-                glTexture->setData(
+                f->glTexSubImage1D(
+                    glTexture->target(),
                     level,
-                    layer,
-                    static_cast<QOpenGLTexture::PixelFormat>(format.External),
-                    static_cast<QOpenGLTexture::PixelType>(format.Type),
+                    0,
+                    extent.x,
+                    format.External,
+                    format.Type,
                     texture.data(layer, face, level));
             }
-        }
-        else {
+            break;
+        case gli::TARGET_1D_ARRAY:
+        case gli::TARGET_2D:
+        case gli::TARGET_CUBE:
             if (gli::is_compressed(texture.format())) {
-                glTexture->setCompressedData(level, layer,
-                    static_cast<QOpenGLTexture::CubeMapFace>(
-                        QOpenGLTexture::CubeMapPositiveX + face),
+                f->glCompressedTexSubImage2D(
+                    glTexture->target(),
+                    level,
+                    0, 0,
+                    extent.x,
+                    texture.target() == gli::TARGET_1D_ARRAY ? layer : extent.y,
+                    format.Internal,
                     texture.size(level),
                     texture.data(layer, face, level));
             }
             else {
-                glTexture->setData(
+                f->glTexSubImage2D(
+                    glTexture->target(),
                     level,
-                    layer,
-                    static_cast<QOpenGLTexture::CubeMapFace>(
-                        QOpenGLTexture::CubeMapPositiveX + face),
-                    static_cast<QOpenGLTexture::PixelFormat>(format.External),
-                    static_cast<QOpenGLTexture::PixelType>(format.Type),
+                    0, 0,
+                    extent.x,
+                    texture.target() == gli::TARGET_1D_ARRAY ? layer : extent.y,
+                    format.External,
+                    format.Type,
                     texture.data(layer, face, level));
             }
+            break;
+        case gli::TARGET_2D_ARRAY:
+        case gli::TARGET_3D:
+        case gli::TARGET_CUBE_ARRAY:
+            if (gli::is_compressed(texture.format())) {
+                f->glCompressedTexSubImage3D(
+                    glTexture->target(),
+                    level,
+                    0, 0, 0,
+                    extent.x, extent.y,
+                    texture.target() == gli::TARGET_3D ? extent.z : layer,
+                    format.Internal,
+                    texture.size(level),
+                    texture.data(layer, face, level));
+            }
+            else {
+                f->glTexSubImage3D(
+                    glTexture->target(),
+                    level,
+                    0, 0, 0,
+                    extent.x, extent.y,
+                    texture.target() == gli::TARGET_3D ? extent.z : layer,
+                    format.External,
+                    format.Type,
+                    texture.data(layer, face, level));
+            }
+            break;
         }
     }
 
