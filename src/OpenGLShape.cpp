@@ -212,8 +212,10 @@ OpenGLShape::OpenGLShape(
         hasBacklight = shader->HasBacklight();
         hasRimlight = shader->HasRimlight();
         hasTintColor = shader->IsSkinTinted();
-        lightingEffect1 = shader->GetSoftlight();
-        lightingEffect2 = shader->GetRimlightPower();
+        softlight = shader->GetSoftlight();
+        backlightPower = shader->GetBacklightPower();
+        rimPower = shader->GetRimlightPower();
+        doubleSided = shader->IsDoubleSided();
         envReflection = shader->GetEnvironmentMapScale();
 
         if (auto alphaProperty = nifFile->GetAlphaProperty(niShape)) {
@@ -326,12 +328,23 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("hasRimlight", hasRimlight);
     program->setUniformValue("hasTintColor", hasTintColor);
 
-    program->setUniformValue("lightingEffect1", lightingEffect1);
-    program->setUniformValue("lightingEffect2", lightingEffect2);
+    program->setUniformValue("softlight", softlight);
+    program->setUniformValue("backlightPower", backlightPower);
+    program->setUniformValue("rimPower", rimPower);
+    program->setUniformValue("doubleSided", doubleSided);
 
     program->setUniformValue("envReflection", envReflection);
 
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+
+    if (doubleSided) {
+        f->glDisable(GL_CULL_FACE);
+    }
+    else {
+        f->glEnable(GL_CULL_FACE);
+        f->glCullFace(GL_BACK);
+    }
+
     f->glAlphaFunc(GL_GREATER, alphaThreshold);
 }
 

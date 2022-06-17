@@ -29,8 +29,6 @@ varying vec4 D;
 
 void main( void )
 {
-    vec4 boneIndex = vec4(0);
-    vec4 boneWeight = vec4(0);
     gl_Position = mvpMatrix * vec4(position, 1.0);
     TexCoord = texCoord;
 

@@ -79,8 +79,10 @@ public:
     bool hasRimlight = false;
     bool hasTintColor = false;
 
-    float lightingEffect1 = 0.3f;
-    float lightingEffect2 = 2.0f;
+    bool doubleSided = false;
+    float softlight = 0.3f;
+    float backlightPower = 0.0f;
+    float rimPower = 2.0f;
     float envReflection = 1.0f;
 
     float alphaThreshold = 0.0f;

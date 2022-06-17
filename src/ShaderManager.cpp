@@ -7,6 +7,10 @@ ShaderManager::ShaderManager(MOBase::IOrganizer* moInfo) : m_MOInfo{ moInfo }
 
 QOpenGLShaderProgram* ShaderManager::getProgram(ShaderType type)
 {
+    if (type == None) {
+        return nullptr;
+    }
+
     if (m_Programs[type] == nullptr) {
         m_Programs[type] = loadProgram(type);
     }
@@ -21,7 +25,7 @@ QOpenGLShaderProgram* ShaderManager::loadProgram(ShaderType type)
 
     switch (type) {
     case SKDefault:
-        vert = "sk_default.vert";
+        vert = "default.vert";
         frag = "sk_default.frag";
         break;
     case SKMSN:
@@ -29,7 +33,7 @@ QOpenGLShaderProgram* ShaderManager::loadProgram(ShaderType type)
         frag = "sk_msn.frag";
         break;
     case SKMultilayer:
-        vert = "sk_default.vert";
+        vert = "default.vert";
         frag = "sk_multilayer.frag";
         break;
     case SKEffectShader:
@@ -37,11 +41,11 @@ QOpenGLShaderProgram* ShaderManager::loadProgram(ShaderType type)
         frag = "sk_multilayer.frag";
         break;
     case FO4Default:
-        vert = "fo4_default.vert";
+        vert = "default.vert";
         frag = "fo4_default.frag";
         break;
     case FO4EffectShader:
-        vert = "fo4_effectshader.vert";
+        vert = "default.vert";
         frag = "fo4_effectshader.frag";
         break;
     default:

@@ -33,8 +33,8 @@ uniform bool hasTintColor;
 uniform bool hasCubeMap;
 uniform bool hasEnvMask;
 
-uniform float lightingEffect1;
-uniform float lightingEffect2;
+uniform float softlight;
+uniform float rimPower;
 
 uniform float envReflection;
 
@@ -151,7 +151,7 @@ void main( void )
 
     vec3 rim = vec3(0.0);
     if ( hasRimlight ) {
-        rim = mask.rgb * pow(vec3((1.0 - EdotN)), vec3(lightingEffect2));
+        rim = mask.rgb * pow(vec3((1.0 - EdotN)), vec3(rimPower));
         rim *= smoothstep( -0.2, 1.0, dot(-L, E) );
 
         emissive += rim * D.rgb;
@@ -159,10 +159,10 @@ void main( void )
 
     vec3 soft = vec3(0.0);
     if ( hasSoftlight ) {
-        float wrap = (dot(normal, L) + lightingEffect1) / (1.0 + lightingEffect1);
+        float wrap = (dot(normal, L) + softlight) / (1.0 + softlight);
 
         soft = max( wrap, 0.0 ) * mask.rgb * smoothstep( 1.0, 0.0, NdotL );
-        soft *= sqrt( clamp( lightingEffect1, 0.0, 1.0 ) );
+        soft *= sqrt( clamp( softlight, 0.0, 1.0 ) );
 
         emissive += soft * D.rgb;
     }

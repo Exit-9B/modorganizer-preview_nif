@@ -8,6 +8,7 @@ class ShaderManager
 public:
     enum ShaderType
     {
+        None = -1,
         SKDefault,
         SKMSN,
         SKMultilayer,
