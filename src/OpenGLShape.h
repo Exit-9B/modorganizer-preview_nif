@@ -63,6 +63,9 @@ public:
     QVector3D specColor{ 1.0f, 1.0f, 1.0f };
     float specStrength = 1.0f ;
     float specGlossiness = 1.0f;
+    float fresnelPower;
+
+    float paletteScale;
 
     bool hasGlowMap = false;
     QColor glowColor = QColorConstants::White;
@@ -84,6 +87,7 @@ public:
     float softlight = 0.3f;
     float backlightPower = 0.0f;
     float rimPower = 2.0f;
+    float subsurfaceRolloff;
     float envReflection = 1.0f;
 
     float alphaThreshold = 0.0f;

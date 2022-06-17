@@ -200,18 +200,25 @@ OpenGLShape::OpenGLShape(
         specColor = convertVector3(shader->GetSpecularColor());
         specStrength = shader->GetSpecularStrength();
         specGlossiness = qBound(0.0f, shader->GetGlossiness(), 128.0f);
+        fresnelPower = shader->GetFresnelPower();
+        paletteScale = shader->GetGrayscaleToPaletteScale();
+
         hasGlowMap = shader->HasGlowmap();
         glowColor = convertColor(shader->GetEmissiveColor());
         glowMult = shader->GetEmissiveMultiple();
+
         alpha = shader->GetAlpha();
         tintColor = { 1.0f, 1.0f, 1.0f };
+
         uvScale = convertVector2(shader->GetUVScale());
         uvOffset = convertVector2(shader->GetUVOffset());
+
         hasEmit = shader->IsEmissive();
         hasSoftlight = shader->HasSoftlight();
         hasBacklight = shader->HasBacklight();
         hasRimlight = shader->HasRimlight();
         hasTintColor = shader->IsSkinTinted();
+
         softlight = shader->GetSoftlight();
         backlightPower = shader->GetBacklightPower();
         rimPower = shader->GetRimlightPower();
@@ -335,6 +342,9 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("specColor", specColor);
     program->setUniformValue("specStrength", specStrength);
     program->setUniformValue("specGlossiness", specGlossiness);
+    program->setUniformValue("fresnelPower", fresnelPower);
+
+    program->setUniformValue("paletteScale", paletteScale);
 
     program->setUniformValue("hasEmit", hasEmit);
     program->setUniformValue("hasSoftlight", hasSoftlight);
@@ -345,6 +355,7 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("softlight", softlight);
     program->setUniformValue("backlightPower", backlightPower);
     program->setUniformValue("rimPower", rimPower);
+    program->setUniformValue("subsurfaceRolloff", subsurfaceRolloff);
     program->setUniformValue("doubleSided", doubleSided);
 
     program->setUniformValue("envReflection", envReflection);
