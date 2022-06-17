@@ -218,6 +218,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     {
         auto extent = texture.extent(level);
 
+        // Qt's upload functions lag badly so we just use the GL API
         switch (texture.target()) {
         case gli::TARGET_1D:
             if (gli::is_compressed(texture.format())) {
