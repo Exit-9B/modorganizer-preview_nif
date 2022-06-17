@@ -21,6 +21,7 @@ enum TextureSlot : std::size_t
     HeightMap = 3,
     EnvironmentMap = 4,
     EnvironmentMask = 5,
+    InnerMap = 6,
     BacklightMap = 7,
     SpecularMap = 7,
 };
@@ -86,4 +87,9 @@ public:
     float envReflection = 1.0f;
 
     float alphaThreshold = 0.0f;
+
+    QVector2D innerScale;
+    float innerThickness;
+    float outerRefraction;
+    float outerReflection;
 };

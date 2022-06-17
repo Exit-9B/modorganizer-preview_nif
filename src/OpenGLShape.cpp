@@ -221,6 +221,15 @@ OpenGLShape::OpenGLShape(
         if (auto alphaProperty = nifFile->GetAlphaProperty(niShape)) {
             alphaThreshold = alphaProperty->threshold / 255.0f;
         }
+
+        if (shader->bslspShaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
+            if (auto bslsp = dynamic_cast<nifly::BSLightingShaderProperty*>(shader)) {
+                innerScale = convertVector2(bslsp->parallaxInnerLayerTextureScale);
+                innerThickness = bslsp->parallaxInnerLayerThickness;
+                outerRefraction = bslsp->parallaxRefractionScale;
+                outerReflection = bslsp->parallaxEnvmapStrength;
+            }
+        }
     }
 }
 
@@ -304,6 +313,11 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
         textures[5]->bind(6);
     }
 
+    program->setUniformValue("InnerMap", 7);
+    if (textures[6]) {
+        textures[6]->bind(7);
+    }
+
     program->setUniformValue("BacklightMap", 8);
     program->setUniformValue("SpecularMap", 8);
     program->setUniformValue("hasSpecularMap", textures[7] != nullptr);
@@ -334,6 +348,13 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("doubleSided", doubleSided);
 
     program->setUniformValue("envReflection", envReflection);
+
+    if (shaderType == ShaderManager::SKMultilayer) {
+        program->setUniformValue("innerScale", innerScale);
+        program->setUniformValue("innerThickness", innerThickness);
+        program->setUniformValue("outerRefraction", outerRefraction);
+        program->setUniformValue("outerReflection", outerReflection);
+    }
 
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
 
