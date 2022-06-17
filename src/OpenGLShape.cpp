@@ -285,51 +285,30 @@ void OpenGLShape::destroy()
 
 void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
 {
-    program->setUniformValue("BaseMap", 1);
-    if (textures[0]) {
-        textures[0]->bind(1);
-    }
+    program->setUniformValue("BaseMap", BaseMap + 1);
+    program->setUniformValue("NormalMap", NormalMap + 1);
+    program->setUniformValue("GlowMap", GlowMap + 1);
+    program->setUniformValue("LightMask", LightMask + 1);
+    program->setUniformValue("hasGlowMap", hasGlowMap && textures[GlowMap] != nullptr);
+    program->setUniformValue("HeightMap", HeightMap + 1);
+    program->setUniformValue("hasHeightMap", textures[HeightMap] != nullptr);
+    program->setUniformValue("DetailMask", DetailMask + 1);
+    program->setUniformValue("hasDetailMask", textures[DetailMask] != nullptr);
+    program->setUniformValue("CubeMap", EnvironmentMap + 1);
+    program->setUniformValue("hasCubeMap", textures[EnvironmentMap] != nullptr);
+    program->setUniformValue("EnvironmentMap", EnvironmentMask + 1);
+    program->setUniformValue("hasEnvMask", textures[EnvironmentMask] != nullptr);
+    program->setUniformValue("TintMask", TintMask + 1);
+    program->setUniformValue("hasTintMask", textures[TintMask] != nullptr);
+    program->setUniformValue("InnerMap", InnerMap + 1);
+    program->setUniformValue("BacklightMap", BacklightMap + 1);
+    program->setUniformValue("SpecularMap", SpecularMap + 1);
+    program->setUniformValue("hasSpecularMap", textures[SpecularMap] != nullptr);
 
-    program->setUniformValue("NormalMap", 2);
-    if (textures[1]) {
-        textures[1]->bind(2);
-    }
-
-    program->setUniformValue("GlowMap", 3);
-    program->setUniformValue("LightMask", 3);
-    program->setUniformValue("hasGlowMap", hasGlowMap && textures[2] != nullptr);
-    if (textures[2]) {
-        textures[2]->bind(3);
-    }
-
-    program->setUniformValue("HeightMap", 4);
-    program->setUniformValue("hasHeightMap", textures[3] != nullptr);
-    if (textures[3]) {
-        textures[3]->bind(4);
-    }
-
-    program->setUniformValue("CubeMap", 5);
-    program->setUniformValue("hasCubeMap", textures[4] != nullptr);
-    if (textures[4]) {
-        textures[4]->bind(5);
-    }
-
-    program->setUniformValue("EnvironmentMap", 6);
-    program->setUniformValue("hasEnvMask", textures[5] != nullptr);
-    if (textures[5]) {
-        textures[5]->bind(6);
-    }
-
-    program->setUniformValue("InnerMap", 7);
-    if (textures[6]) {
-        textures[6]->bind(7);
-    }
-
-    program->setUniformValue("BacklightMap", 8);
-    program->setUniformValue("SpecularMap", 8);
-    program->setUniformValue("hasSpecularMap", textures[7] != nullptr);
-    if (textures[7]) {
-        textures[7]->bind(8);
+    for (int i = 0; i < textures.size(); i++) {
+        if (textures[i]) {
+            textures[i]->bind(i + 1);
+        }
     }
 
     program->setUniformValue("ambientColor", QVector4D(0.2f, 0.2f, 0.2f, 1.0f));

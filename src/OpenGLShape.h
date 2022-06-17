@@ -12,15 +12,17 @@
 #include "ShaderManager.h"
 #include "TextureManager.h"
 
-enum TextureSlot : std::size_t
+enum TextureSlot
 {
     BaseMap = 0,
     NormalMap = 1,
     GlowMap = 2,
     LightMask = 2,
     HeightMap = 3,
+    DetailMask = 3,
     EnvironmentMap = 4,
     EnvironmentMask = 5,
+    TintMask = 6,
     InnerMap = 6,
     BacklightMap = 7,
     SpecularMap = 7,
@@ -57,7 +59,7 @@ public:
     QOpenGLBuffer* indexBuffer = nullptr;
     GLsizei elements = 0;
 
-    QOpenGLTexture* textures[13] { nullptr };
+    std::array<QOpenGLTexture*, 13> textures { nullptr };
 
     QMatrix4x4 modelMatrix;
     QVector3D specColor{ 1.0f, 1.0f, 1.0f };
