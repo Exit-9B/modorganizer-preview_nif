@@ -173,10 +173,11 @@ OpenGLShape::OpenGLShape(
                 if (!texturePath.empty()) {
                     textures[i] = textureManager->getTexture(texturePath);
                 }
-                else {
+
+                if (textures[i] == nullptr) {
                     switch (i) {
                     case TextureSlot::BaseMap:
-                        textures[i] = textureManager->getBlackTexture();
+                        textures[i] = textureManager->getErrorTexture();
                         break;
                     case TextureSlot::NormalMap:
                         textures[i] = textureManager->getFlatNormalTexture();

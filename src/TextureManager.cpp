@@ -106,7 +106,7 @@ QOpenGLTexture* TextureManager::getWhiteTexture()
 QOpenGLTexture* TextureManager::getFlatNormalTexture()
 {
     if (!m_FlatNormalTexture) {
-        m_FlatNormalTexture = makeSolidColor({0.5f, 0.5f, 1.0f, 0.0f });
+        m_FlatNormalTexture = makeSolidColor({0.5f, 0.5f, 1.0f, 1.0f });
     }
 
     return m_FlatNormalTexture;
@@ -122,7 +122,7 @@ QOpenGLTexture* TextureManager::loadTexture(QString texturePath)
 
     if (!game) {
         qCritical(qUtf8Printable(QObject::tr("Failed to interface with managed game plugin")));
-        return getErrorTexture();
+        return nullptr;
     }
 
     auto realPath = resolvePath(game, texturePath);
@@ -132,7 +132,7 @@ QOpenGLTexture* TextureManager::loadTexture(QString texturePath)
 
     auto gameArchives = game->feature<DataArchives>();
     if (!gameArchives) {
-        return getErrorTexture();
+        return nullptr;
     }
 
     auto archives = gameArchives->archives(m_MOInfo->profile());
@@ -175,7 +175,7 @@ QOpenGLTexture* TextureManager::loadTexture(QString texturePath)
         }
     }
 
-    return getErrorTexture();
+    return nullptr;
 }
 
 QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
