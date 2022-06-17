@@ -26,7 +26,6 @@ uniform bool hasEmit;
 uniform bool hasSoftlight;
 uniform bool hasBacklight;
 uniform bool hasRimlight;
-uniform bool hasModelSpaceNormals;
 uniform bool hasSpecularMap;
 uniform bool hasDetailMask;
 uniform bool hasTintMask;
