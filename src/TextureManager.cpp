@@ -18,14 +18,15 @@ TextureManager::TextureManager(MOBase::IOrganizer* moInfo) : m_MOInfo{ moInfo }
 
 void TextureManager::cleanup()
 {
-    for (auto& [path, texture] : m_Textures) {
-        if (texture && texture != m_ErrorTexture) {
+    for (auto it = m_Textures.begin(); it != m_Textures.end();) {
+        auto texture = it.value();
+        m_Textures.erase(it++);
+
+        if (texture) {
             texture->destroy();
             delete texture;
         }
     }
-
-    m_Textures.clear();
 
     if (m_ErrorTexture) {
         m_ErrorTexture->destroy();
@@ -63,16 +64,16 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
         return nullptr;
     }
 
-    auto lower = texturePath.toLower();
+    auto key = texturePath.toLower();
 
-    auto cached = m_Textures.find(lower);
+    auto cached = m_Textures.find(key);
     if (cached != m_Textures.end()) {
-        return cached->second;
+        return cached.value();
     }
 
     auto texture = loadTexture(texturePath);
 
-    m_Textures[lower] = texture;
+    m_Textures[key] = texture;
     return texture;
 }
 

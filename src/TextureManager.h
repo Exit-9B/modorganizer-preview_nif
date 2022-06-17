@@ -38,6 +38,5 @@ private:
     QOpenGLTexture* m_WhiteTexture = nullptr;
     QOpenGLTexture* m_FlatNormalTexture = nullptr;
 
-    // QMap was very crash-prone so we use std::map
-    std::map<QString, QOpenGLTexture*> m_Textures;
+    QMap<QString, QOpenGLTexture*> m_Textures;
 };
