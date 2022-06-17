@@ -23,7 +23,7 @@ public:
 
 private:
     inline static constexpr float MinDistance = 1.0f;
-    inline static constexpr float MaxDistance = 1000.0f;
+    inline static constexpr float MaxDistance = 5000.0f;
 
     static float repeat(float value, float min, float max);
 
