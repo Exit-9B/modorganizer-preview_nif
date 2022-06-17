@@ -44,40 +44,33 @@ void NifWidget::mouseMoveEvent(QMouseEvent* event)
     switch (event->buttons()) {
     case Qt::LeftButton:
     {
-        m_Yaw += delta.x() * 0.5f;
-        m_Pitch += delta.y() * 0.5f;
+        m_Camera->rotate(delta.x() * 0.5, delta.y() * 0.5);
     } break;
     case Qt::MiddleButton:
     {
-        float viewDX = m_CameraDistance / m_ViewportWidth;
-        float viewDY = m_CameraDistance / m_ViewportHeight;
+        float viewDX = m_Camera->distance() / m_ViewportWidth;
+        float viewDY = m_Camera->distance() / m_ViewportHeight;
 
         QMatrix4x4 r;
-        r.rotate(-m_Yaw, 0.0f, 1.0f, 0.0f);
-        r.rotate(-m_Pitch, 1.0f, 0.0f, 0.0f);
+        r.rotate(-m_Camera->yaw(), 0.0f, 1.0f, 0.0f);
+        r.rotate(-m_Camera->pitch(), 1.0f, 0.0f, 0.0f);
 
         auto pan = r * QVector4D(-delta.x() * viewDX, delta.y() * viewDY, 0.0f, 0.0f);
 
-        m_CameraLookAt += QVector3D(pan);
+        m_Camera->pan(QVector3D(pan));
     } break;
     case Qt::RightButton:
     {
         if (event->modifiers() == Qt::ShiftModifier) {
-            m_CameraDistance += delta.y() * 0.1f;
+            m_Camera->zoomDistance(delta.y() * 0.1f);
         }
     } break;
     }
-
-    updateCamera();
-    update();
 }
 
 void NifWidget::wheelEvent(QWheelEvent* event)
 {
-    m_CameraDistance *= 1.0f - (event->angleDelta().y() / 120.0f * 0.38f);
-
-    updateCamera();
-    update();
+    m_Camera->zoomFactor(1.0f - (event->angleDelta().y() / 120.0f * 0.38f));
 }
 
 void NifWidget::initializeGL()
@@ -101,28 +94,43 @@ void NifWidget::initializeGL()
         &NifWidget::cleanup,
         Qt::DirectConnection);
 
-    auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
-
     auto shapes = m_NifFile->GetShapes();
     for (auto& shape : shapes) {
         m_GLShapes.emplace_back(m_NifFile.get(), shape, m_TextureManager.get());
     }
 
-    float largestRadius = 0.0f;
-    for (auto& shape : shapes) {
-        if (auto vertices = m_NifFile->GetVertsForShape(shape)) {
-            auto bounds = nifly::BoundingSphere(*vertices);
+    m_Camera = SharedCamera;
+    if (m_Camera.isNull()) {
+        m_Camera = { new Camera(), &Camera::deleteLater };
+        SharedCamera = m_Camera;
 
-            if (bounds.radius > largestRadius) {
-                largestRadius = bounds.radius;
+        float largestRadius = 0.0f;
+        for (auto& shape : shapes) {
+            if (auto vertices = m_NifFile->GetVertsForShape(shape)) {
+                auto bounds = nifly::BoundingSphere(*vertices);
 
-                m_CameraDistance = bounds.radius * 2.4f;
-                m_CameraLookAt = { -bounds.center.x, bounds.center.z, bounds.center.y };
+                if (bounds.radius > largestRadius) {
+                    largestRadius = bounds.radius;
+
+                    m_Camera->setDistance(bounds.radius * 2.4f);
+                    m_Camera->setLookAt({ -bounds.center.x, bounds.center.z, bounds.center.y });
+                }
             }
         }
     }
 
     updateCamera();
+
+    connect(
+        m_Camera.get(),
+        &Camera::cameraMoved,
+        this,
+        [this](){
+            updateCamera();
+            update();
+        });
+
+    auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_ALPHA_TEST);
@@ -189,18 +197,16 @@ void NifWidget::cleanup()
 
 void NifWidget::updateCamera()
 {
-    m_CameraDistance = qBound(1.0f, m_CameraDistance, 1000.0f);
-
     QMatrix4x4 m;
-    m.translate(0.0f, 0.0f, -m_CameraDistance);
-    m.rotate(m_Pitch, 1.0f, 0.0f, 0.0f);
-    m.rotate(m_Yaw, 0.0f, 1.0f, 0.0f);
-    m.translate(-m_CameraLookAt);
+    m.translate(0.0f, 0.0f, -m_Camera->distance());
+    m.rotate(m_Camera->pitch(), 1.0f, 0.0f, 0.0f);
+    m.rotate(m_Camera->yaw(), 0.0f, 1.0f, 0.0f);
+    m.translate(-m_Camera->lookAt());
     m *= QMatrix4x4{
         -1, 0, 0, 0,
          0, 0, 1, 0,
          0, 1, 0, 0,
-         0, 0, 0, 1
+         0, 0, 0, 1,
     };
     m_ViewMatrix = m;
 }

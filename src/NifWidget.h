@@ -1,18 +1,19 @@
 #pragma once
 
-#include <NifFile.hpp>
-
-#include <imoinfo.h>
-#include <QOpenGLWidget>
-
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLBuffer>
-#include <QOpenGLDebugLogger>
-#include <QOpenGLShaderProgram>
-
+#include "Camera.h"
 #include "OpenGLShape.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
+
+#include <QOpenGLBuffer>
+#include <QOpenGLDebugLogger>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLWidget>
+#include <QSharedPointer>
+
+#include <imoinfo.h>
+#include <NifFile.hpp>
 
 #include <memory>
 
@@ -41,6 +42,8 @@ private:
     void cleanup();
     void updateCamera();
 
+    inline static QWeakPointer<Camera> SharedCamera;
+
     std::shared_ptr<nifly::NifFile> m_NifFile;
     MOBase::IOrganizer* m_MOInfo = nullptr;
 
@@ -51,10 +54,7 @@ private:
 
     std::vector<OpenGLShape> m_GLShapes;
 
-    QVector3D m_CameraLookAt;
-    float m_Pitch = 0.0f;
-    float m_Yaw = 0.0f;
-    float m_CameraDistance = 100.0f;
+    QSharedPointer<Camera> m_Camera;
 
     QMatrix4x4 m_ViewMatrix;
     QMatrix4x4 m_ProjectionMatrix;
