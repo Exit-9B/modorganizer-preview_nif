@@ -36,19 +36,19 @@ void TextureManager::cleanup()
 
     if (m_BlackTexture) {
         m_BlackTexture->destroy();
-        delete m_ErrorTexture;
+        delete m_BlackTexture;
         m_BlackTexture = nullptr;
     }
 
     if (m_WhiteTexture) {
         m_WhiteTexture->destroy();
-        delete m_ErrorTexture;
+        delete m_WhiteTexture;
         m_WhiteTexture = nullptr;
     }
 
     if (m_FlatNormalTexture) {
         m_FlatNormalTexture->destroy();
-        delete m_ErrorTexture;
+        delete m_FlatNormalTexture;
         m_FlatNormalTexture = nullptr;
     }
 }
