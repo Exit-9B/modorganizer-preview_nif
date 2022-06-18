@@ -49,7 +49,7 @@ std::set<QString> PreviewNif::supportedExtensions() const
 
 QWidget* PreviewNif::genFilePreview(const QString& fileName, const QSize& maxSize) const
 {
-    auto path = std::filesystem::path(fileName.toStdString());
+    auto path = std::filesystem::path(fileName.toStdWString());
     auto nifFile = std::make_shared<nifly::NifFile>(path);
 
     if (!nifFile->IsValid()) {
