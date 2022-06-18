@@ -13,7 +13,7 @@ OpenGLShape::OpenGLShape(
     auto shader = nifFile->GetShader(niShape);
     auto& version = nifFile->GetHeader().GetVersion();
     if (version.IsFO4()) {
-        if (shader->GetBlockName() == "BSEffectShaderProperty") {
+        if (shader && shader->GetBlockName() == "BSEffectShaderProperty") {
             shaderType = ShaderManager::FO4EffectShader;
         }
         else {
@@ -21,14 +21,14 @@ OpenGLShape::OpenGLShape(
         }
     }
     else {
-        if (shader->GetBlockName() == "BSEffectShaderProperty") {
+        if (shader && shader->GetBlockName() == "BSEffectShaderProperty") {
             shaderType = ShaderManager::SKEffectShader;
         }
         else {
-            if (shader->IsModelSpace()) {
+            if (shader && shader->IsModelSpace()) {
                 shaderType = ShaderManager::SKMSN;
             }
-            else if (shader->bslspShaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
+            else if (shader && shader->bslspShaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
                 shaderType = ShaderManager::SKMultilayer;
             }
             else {
@@ -238,6 +238,10 @@ OpenGLShape::OpenGLShape(
                 outerReflection = bslsp->parallaxEnvmapStrength;
             }
         }
+    }
+    else {
+        textures[BaseMap] = textureManager->getWhiteTexture();
+        textures[NormalMap] = textureManager->getFlatNormalTexture();
     }
 }
 
