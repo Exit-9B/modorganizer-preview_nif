@@ -3,6 +3,16 @@
 #include <imoinfo.h>
 #include <QOpenGLShaderProgram>
 
+enum VertexAttrib
+{
+    AttribPosition = 0,
+    AttribNormal = 1,
+    AttribTangent = 2,
+    AttribBitangent = 3,
+    AttribTexCoord = 4,
+    AttribColor = 5,
+};
+
 class ShaderManager
 {
 public:

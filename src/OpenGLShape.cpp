@@ -41,113 +41,146 @@ OpenGLShape::OpenGLShape(
     vertexArray->create();
     auto binder = QOpenGLVertexArrayObject::Binder(vertexArray);
 
-    auto numVertices = niShape->GetNumVertices();
-
     nifly::MatTransform transform;
     nifFile->GetNodeTransformToGlobal(niShape->name.get(), transform);
     modelMatrix = convertTransform(transform);
 
-    if (niShape->HasVertices()) {
+    f->glVertexAttrib3f(AttribNormal, 0.5f, 0.5f, 1.0f);
+    f->glVertexAttrib3f(AttribTangent, 1.0f, 0.5, 0.5f);
+    f->glVertexAttrib3f(AttribBitangent, 0.5f, 1.0f, 0.5f);
+    f->glVertexAttrib4f(AttribColor, 1.0f, 1.0f, 1.0f, 1.0f);
+
+    if (auto vertices = nifFile->GetVertsForShape(niShape)) {
         vertexBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
         if (vertexBuffer->create()) {
             vertexBuffer->bind();
 
-            if (auto vertices = nifFile->GetVertsForShape(niShape)) {
-                vertexBuffer->allocate(
-                    vertices->data(),
-                    vertices->size() * sizeof(nifly::Vector3));
+            vertexBuffer->allocate(
+                vertices->data(),
+                vertices->size() * sizeof(nifly::Vector3));
+
+            f->glEnableVertexAttribArray(AttribPosition);
+            f->glVertexAttribPointer(
+                AttribPosition,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(nifly::Vector3),
+                nullptr);
             }
 
-            f->glEnableVertexAttribArray(0);
-            f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(nifly::Vector3), nullptr);
             vertexBuffer->release();
-        }
     }
 
-    if (niShape->HasNormals()) {
+    if (auto normals = nifFile->GetNormalsForShape(niShape)) {
         normalBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
         if (normalBuffer->create()) {
             normalBuffer->bind();
 
-            if (auto normals = nifFile->GetNormalsForShape(niShape)) {
-                normalBuffer->allocate(
-                    normals->data(),
-                    normals->size() * sizeof(nifly::Vector3));
-            }
+            normalBuffer->allocate(
+                normals->data(),
+                normals->size() * sizeof(nifly::Vector3));
 
-            f->glEnableVertexAttribArray(1);
-            f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(nifly::Vector3), nullptr);
+            f->glEnableVertexAttribArray(AttribNormal);
+            f->glVertexAttribPointer(
+                AttribNormal,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(nifly::Vector3),
+                nullptr);
+
             normalBuffer->release();
         }
     }
 
-    if (niShape->HasTangents()) {
+    if (auto tangents = nifFile->GetTangentsForShape(niShape)) {
         tangentBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
         if (tangentBuffer->create()) {
             tangentBuffer->bind();
 
-            if (auto tangents = nifFile->GetTangentsForShape(niShape)) {
-                tangentBuffer->allocate(
-                    tangents->data(),
-                    tangents->size() * sizeof(nifly::Vector3));
-            }
+            tangentBuffer->allocate(
+                tangents->data(),
+                tangents->size() * sizeof(nifly::Vector3));
 
-            f->glEnableVertexAttribArray(2);
-            f->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(nifly::Vector3), nullptr);
+            f->glEnableVertexAttribArray(AttribTangent);
+            f->glVertexAttribPointer(
+                AttribTangent,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(nifly::Vector3),
+                nullptr);
+
             tangentBuffer->release();
         }
+    }
 
+    if (auto bitangents = nifFile->GetBitangentsForShape(niShape)) {
         bitangentBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
         if (bitangentBuffer->create()) {
             bitangentBuffer->bind();
 
-            if (auto bitangents = nifFile->GetBitangentsForShape(niShape)) {
-                bitangentBuffer->allocate(
-                    bitangents->data(),
-                    bitangents->size() * sizeof(nifly::Vector3));
-            }
+            bitangentBuffer->allocate(
+                bitangents->data(),
+                bitangents->size() * sizeof(nifly::Vector3));
 
-            f->glEnableVertexAttribArray(3);
-            f->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(nifly::Vector3), nullptr);
+            f->glEnableVertexAttribArray(AttribBitangent);
+            f->glVertexAttribPointer(
+                AttribBitangent,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(nifly::Vector3),
+                nullptr);
+
             bitangentBuffer->release();
         }
     }
 
-    if (niShape->HasUVs()) {
+    if (auto texCoords = nifFile->GetUvsForShape(niShape)) {
         texCoordBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
         if (texCoordBuffer->create()) {
             texCoordBuffer->bind();
 
-            if (auto texCoords = nifFile->GetUvsForShape(niShape)) {
-                texCoordBuffer->allocate(
-                    texCoords->data(),
-                    texCoords->size() * sizeof(nifly::Vector2));
-            }
+            texCoordBuffer->allocate(
+                texCoords->data(),
+                texCoords->size() * sizeof(nifly::Vector2));
 
-            f->glEnableVertexAttribArray(4);
-            f->glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(nifly::Vector2), nullptr);
+            f->glEnableVertexAttribArray(AttribTexCoord);
+            f->glVertexAttribPointer(
+                AttribTexCoord,
+                2,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(nifly::Vector2),
+                nullptr);
+
             texCoordBuffer->release();
         }
     }
 
-    if (!niShape->HasVertexColors()) {
-        niShape->SetVertexColors(true);
-    }
+    std::vector<nifly::Color4> colors;
+    if (nifFile->GetColorsForShape(niShape, colors)) {
+        colorBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+        if (colorBuffer->create()) {
+            colorBuffer->bind();
 
-    colorBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-    if (colorBuffer->create()) {
-        colorBuffer->bind();
-
-        std::vector<nifly::Color4> colors;
-        if (nifFile->GetColorsForShape(niShape, colors)) {
             colorBuffer->allocate(
                 colors.data(),
                 colors.size() * sizeof(nifly::Color4));
-        }
 
-        f->glEnableVertexAttribArray(5);
-        f->glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(nifly::Color4), nullptr);
-        colorBuffer->release();
+            f->glEnableVertexAttribArray(AttribColor);
+            f->glVertexAttribPointer(
+                AttribColor,
+                4,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(nifly::Color4),
+                nullptr);
+
+            colorBuffer->release();
+        }
     }
 
     indexBuffer = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
@@ -209,8 +242,6 @@ OpenGLShape::OpenGLShape(
         glowMult = shader->GetEmissiveMultiple();
 
         alpha = shader->GetAlpha();
-        tintColor = { 1.0f, 1.0f, 1.0f };
-
         uvScale = convertVector2(shader->GetUVScale());
         uvOffset = convertVector2(shader->GetUVOffset());
 
@@ -218,7 +249,6 @@ OpenGLShape::OpenGLShape(
         hasSoftlight = shader->HasSoftlight();
         hasBacklight = shader->HasBacklight();
         hasRimlight = shader->HasRimlight();
-        hasTintColor = shader->IsSkinTinted();
 
         softlight = shader->GetSoftlight();
         backlightPower = shader->GetBacklightPower();
@@ -230,8 +260,18 @@ OpenGLShape::OpenGLShape(
             alphaThreshold = alphaProperty->threshold / 255.0f;
         }
 
-        if (shader->bslspShaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
-            if (auto bslsp = dynamic_cast<nifly::BSLightingShaderProperty*>(shader)) {
+        if (auto bslsp = dynamic_cast<nifly::BSLightingShaderProperty*>(shader)) {
+            auto shaderType = bslsp->GetShaderType();
+            if (shaderType == nifly::BSLSP_SKINTINT || shaderType == nifly::BSLSP_FACE) {
+                tintColor = convertVector3(bslsp->skinTintColor);
+                hasTintColor = true;
+            }
+            else if (shaderType == nifly::BSLSP_HAIRTINT) {
+                tintColor = convertVector3(bslsp->hairTintColor);
+                hasTintColor = true;
+            }
+
+            if (shaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
                 innerScale = convertVector2(bslsp->parallaxInnerLayerTextureScale);
                 innerThickness = bslsp->parallaxInnerLayerThickness;
                 outerRefraction = bslsp->parallaxRefractionScale;

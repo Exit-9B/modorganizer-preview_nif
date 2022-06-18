@@ -61,13 +61,12 @@ QOpenGLShaderProgram* ShaderManager::loadProgram(ShaderType type)
     program->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexShader);
     program->addShaderFromSourceFile(QOpenGLShader::Fragment, fragmentShader);
 
-    // Currently the same for every program
-    program->bindAttributeLocation("position", 0);
-    program->bindAttributeLocation("normal", 1);
-    program->bindAttributeLocation("tangent", 2);
-    program->bindAttributeLocation("bitangent", 3);
-    program->bindAttributeLocation("texCoord", 4);
-    program->bindAttributeLocation("color", 5);
+    program->bindAttributeLocation("position", AttribPosition);
+    program->bindAttributeLocation("normal", AttribNormal);
+    program->bindAttributeLocation("tangent", AttribTangent);
+    program->bindAttributeLocation("bitangent", AttribBitangent);
+    program->bindAttributeLocation("texCoord", AttribTexCoord);
+    program->bindAttributeLocation("color", AttribColor);
 
     program->link();
 
