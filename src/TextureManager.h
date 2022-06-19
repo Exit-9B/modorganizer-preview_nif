@@ -38,5 +38,5 @@ private:
     QOpenGLTexture* m_WhiteTexture = nullptr;
     QOpenGLTexture* m_FlatNormalTexture = nullptr;
 
-    QMap<QString, QOpenGLTexture*> m_Textures;
+    std::map<std::wstring, QOpenGLTexture*> m_Textures;
 };

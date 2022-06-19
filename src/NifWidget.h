@@ -29,6 +29,12 @@ public:
         QWidget* parent = nullptr,
         Qt::WindowFlags f = {0});
 
+    ~NifWidget();
+    NifWidget(const NifWidget&) = delete;
+    NifWidget(NifWidget&&) = delete;
+    NifWidget& operator=(const NifWidget&) = delete;
+    NifWidget& operator=(NifWidget&&) = delete;
+
 protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;

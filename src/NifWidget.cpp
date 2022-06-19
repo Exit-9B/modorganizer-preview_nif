@@ -30,6 +30,11 @@ NifWidget::NifWidget(
     setFormat(format);
 }
 
+NifWidget::~NifWidget()
+{
+    cleanup();
+}
+
 void NifWidget::mousePressEvent(QMouseEvent* event)
 {
     m_MousePos = event->globalPos();
@@ -86,13 +91,6 @@ void NifWidget::initializeGL()
                 qDebug(qUtf8Printable(msg));
             });
     }
-
-    connect(
-        context(),
-        &QOpenGLContext::aboutToBeDestroyed,
-        this,
-        &NifWidget::cleanup,
-        Qt::DirectConnection);
 
     auto shapes = m_NifFile->GetShapes();
     for (auto& shape : shapes) {

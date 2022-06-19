@@ -18,36 +18,28 @@ TextureManager::TextureManager(MOBase::IOrganizer* moInfo) : m_MOInfo{ moInfo }
 
 void TextureManager::cleanup()
 {
-    for (auto it = m_Textures.begin(); it != m_Textures.end();) {
-        auto texture = it.value();
+    for (auto it = m_Textures.cbegin(); it != m_Textures.cend();) {
+        auto texture = it->second;
         m_Textures.erase(it++);
-
-        if (texture) {
-            texture->destroy();
-            delete texture;
-        }
+        delete texture;
     }
 
     if (m_ErrorTexture) {
-        m_ErrorTexture->destroy();
         delete m_ErrorTexture;
         m_ErrorTexture = nullptr;
     }
 
     if (m_BlackTexture) {
-        m_BlackTexture->destroy();
         delete m_BlackTexture;
         m_BlackTexture = nullptr;
     }
 
     if (m_WhiteTexture) {
-        m_WhiteTexture->destroy();
         delete m_WhiteTexture;
         m_WhiteTexture = nullptr;
     }
 
     if (m_FlatNormalTexture) {
-        m_FlatNormalTexture->destroy();
         delete m_FlatNormalTexture;
         m_FlatNormalTexture = nullptr;
     }
@@ -64,11 +56,11 @@ QOpenGLTexture* TextureManager::getTexture(QString texturePath)
         return nullptr;
     }
 
-    auto key = texturePath.toLower();
+    auto key = texturePath.toLower().toStdWString();
 
     auto cached = m_Textures.find(key);
     if (cached != m_Textures.end()) {
-        return cached.value();
+        return cached->second;
     }
 
     auto texture = loadTexture(texturePath);
@@ -89,7 +81,7 @@ QOpenGLTexture* TextureManager::getErrorTexture()
 QOpenGLTexture* TextureManager::getBlackTexture()
 {
     if (!m_BlackTexture) {
-        m_BlackTexture = makeSolidColor({0.0f, 0.0f, 0.0f, 1.0f });
+        m_BlackTexture = makeSolidColor({ 0.0f, 0.0f, 0.0f, 1.0f });
     }
 
     return m_BlackTexture;
@@ -98,7 +90,7 @@ QOpenGLTexture* TextureManager::getBlackTexture()
 QOpenGLTexture* TextureManager::getWhiteTexture()
 {
     if (!m_WhiteTexture) {
-        m_WhiteTexture = makeSolidColor({1.0f, 1.0f, 1.0f, 1.0f });
+        m_WhiteTexture = makeSolidColor({ 1.0f, 1.0f, 1.0f, 1.0f });
     }
 
     return m_WhiteTexture;
@@ -107,7 +99,7 @@ QOpenGLTexture* TextureManager::getWhiteTexture()
 QOpenGLTexture* TextureManager::getFlatNormalTexture()
 {
     if (!m_FlatNormalTexture) {
-        m_FlatNormalTexture = makeSolidColor({0.5f, 0.5f, 1.0f, 1.0f });
+        m_FlatNormalTexture = makeSolidColor({ 0.5f, 0.5f, 1.0f, 1.0f });
     }
 
     return m_FlatNormalTexture;
