@@ -150,6 +150,7 @@ void NifWidget::initializeGL()
     auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
 
     f->glEnable(GL_DEPTH_TEST);
+    f->glDepthFunc(GL_LEQUAL);
     f->glClearColor(0.18, 0.18, 0.18, 1.0);
 }
 
