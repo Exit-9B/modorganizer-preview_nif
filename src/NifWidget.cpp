@@ -78,6 +78,27 @@ void NifWidget::wheelEvent(QWheelEvent* event)
     m_Camera->zoomFactor(1.0f - (event->angleDelta().y() / 120.0f * 0.38f));
 }
 
+nifly::BoundingSphere NifWidget::getBounds(nifly::NiShape* shape) const
+{
+    if (auto vertices = m_NifFile->GetVertsForShape(shape)) {
+        auto bounds = nifly::BoundingSphere(*vertices);
+
+        nifly::MatTransform xform = shape->GetTransformToParent();
+        nifly::NiNode* parent = m_NifFile->GetParentNode(shape);
+        while (parent) {
+            xform = parent->GetTransformToParent().ComposeTransforms(xform);
+            parent = m_NifFile->GetParentNode(parent);
+        }
+
+        bounds.center = xform.ApplyTransform(bounds.center);
+        bounds.radius = xform.ApplyTransformToDist(bounds.radius);
+        return bounds;
+    }
+    else {
+        return nifly::BoundingSphere();
+    }
+}
+
 void NifWidget::initializeGL()
 {
     if (m_Logger) {
@@ -104,15 +125,13 @@ void NifWidget::initializeGL()
 
         float largestRadius = 0.0f;
         for (auto& shape : shapes) {
-            if (auto vertices = m_NifFile->GetVertsForShape(shape)) {
-                auto bounds = nifly::BoundingSphere(*vertices);
+            auto bounds = getBounds(shape);
 
-                if (bounds.radius > largestRadius) {
-                    largestRadius = bounds.radius;
+            if (bounds.radius > largestRadius) {
+                largestRadius = bounds.radius;
 
-                    m_Camera->setDistance(bounds.radius * 2.4f);
-                    m_Camera->setLookAt({ -bounds.center.x, bounds.center.z, bounds.center.y });
-                }
+                m_Camera->setDistance(bounds.radius * 2.4f);
+                m_Camera->setLookAt({ -bounds.center.x, bounds.center.z, bounds.center.y });
             }
         }
     }
@@ -131,7 +150,6 @@ void NifWidget::initializeGL()
     auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
 
     f->glEnable(GL_DEPTH_TEST);
-    f->glEnable(GL_ALPHA_TEST);
     f->glClearColor(0.18, 0.18, 0.18, 1.0);
 }
 

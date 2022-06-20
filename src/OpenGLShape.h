@@ -84,6 +84,7 @@ public:
     bool hasBacklight = false;
     bool hasRimlight = false;
     bool hasTintColor = false;
+    bool hasWeaponBlood = false;
 
     bool doubleSided = false;
     float softlight = 0.3f;
@@ -92,6 +93,11 @@ public:
     float subsurfaceRolloff;
     float envReflection = 1.0f;
 
+    bool alphaBlendEnable = false;
+    GLenum srcBlendMode = GL_ONE;
+    GLenum dstBlendMode = GL_ONE;
+    bool alphaTestEnable = false;
+    GLenum alphaTestMode = GL_GREATER;
     float alphaThreshold = 0.0f;
 
     QVector2D innerScale;

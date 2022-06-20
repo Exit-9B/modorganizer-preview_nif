@@ -38,7 +38,7 @@ QOpenGLShaderProgram* ShaderManager::loadProgram(ShaderType type)
         break;
     case SKEffectShader:
         vert = "sk_effectshader.vert";
-        frag = "sk_multilayer.frag";
+        frag = "sk_effectshader.frag";
         break;
     case FO4Default:
         vert = "default.vert";

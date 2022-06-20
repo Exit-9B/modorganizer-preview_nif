@@ -13,7 +13,7 @@ OpenGLShape::OpenGLShape(
     auto shader = nifFile->GetShader(niShape);
     auto& version = nifFile->GetHeader().GetVersion();
     if (version.IsFO4()) {
-        if (shader && shader->GetBlockName() == "BSEffectShaderProperty") {
+        if (shader && shader->HasType<nifly::BSEffectShaderProperty>()) {
             shaderType = ShaderManager::FO4EffectShader;
         }
         else {
@@ -21,14 +21,14 @@ OpenGLShape::OpenGLShape(
         }
     }
     else {
-        if (shader && shader->GetBlockName() == "BSEffectShaderProperty") {
+        if (shader && shader->HasType<nifly::BSEffectShaderProperty>()) {
             shaderType = ShaderManager::SKEffectShader;
         }
         else {
             if (shader && shader->IsModelSpace()) {
                 shaderType = ShaderManager::SKMSN;
             }
-            else if (shader && shader->bslspShaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
+            else if (shader && shader->GetShaderType() == nifly::BSLSP_MULTILAYERPARALLAX) {
                 shaderType = ShaderManager::SKMultilayer;
             }
             else {
@@ -41,9 +41,13 @@ OpenGLShape::OpenGLShape(
     vertexArray->create();
     auto binder = QOpenGLVertexArrayObject::Binder(vertexArray);
 
-    nifly::MatTransform transform;
-    nifFile->GetNodeTransformToGlobal(niShape->name.get(), transform);
-    modelMatrix = convertTransform(transform);
+    nifly::MatTransform xform = niShape->GetTransformToParent();
+    nifly::NiNode* parent = nifFile->GetParentNode(niShape);
+    while (parent) {
+        xform = parent->GetTransformToParent().ComposeTransforms(xform);
+        parent = nifFile->GetParentNode(parent);
+    }
+    modelMatrix = convertTransform(xform);
 
     f->glVertexAttrib3f(AttribNormal, 0.5f, 0.5f, 1.0f);
     f->glVertexAttrib3f(AttribTangent, 1.0f, 0.5, 0.5f);
@@ -257,26 +261,69 @@ OpenGLShape::OpenGLShape(
         envReflection = shader->GetEnvironmentMapScale();
 
         if (auto alphaProperty = nifFile->GetAlphaProperty(niShape)) {
+
+            static auto getBlendMode =
+                [](int flags) {
+                    switch (flags) {
+                    case 0: return GL_ONE;
+                    case 1: return GL_ZERO;
+                    case 2: return GL_SRC_COLOR;
+                    case 3: return GL_ONE_MINUS_SRC_COLOR;
+                    case 4: return GL_DST_COLOR;
+                    case 5: return GL_ONE_MINUS_DST_COLOR;
+                    case 6: return GL_SRC_ALPHA;
+                    case 7: return GL_ONE_MINUS_SRC_ALPHA;
+                    case 8: return GL_DST_ALPHA;
+                    case 9: return GL_ONE_MINUS_DST_ALPHA;
+                    default: return GL_ONE;
+                    }
+                };
+
+            static auto getTestMode =
+                [](int flags) {
+                    switch (flags) {
+                    case 0: return GL_ALWAYS;
+                    case 1: return GL_LESS;
+                    case 2: return GL_EQUAL;
+                    case 3: return GL_LEQUAL;
+                    case 4: return GL_GREATER;
+                    case 5: return GL_NOTEQUAL;
+                    case 6: return GL_GEQUAL;
+                    case 7: return GL_NEVER;
+                    default: return GL_ALWAYS;
+                    }
+                };
+
+            auto& flags = alphaProperty->flags;
+            alphaBlendEnable = flags & (1 << 0);
+            srcBlendMode = getBlendMode((flags & (0xF << 1)) >> 1);
+            dstBlendMode = getBlendMode((flags & (0xF << 5)) >> 5);
+            alphaTestEnable = flags & (1 << 9);
+            alphaTestMode = getTestMode((flags & (0x7 << 10)) >> 10);
             alphaThreshold = alphaProperty->threshold / 255.0f;
         }
 
         if (auto bslsp = dynamic_cast<nifly::BSLightingShaderProperty*>(shader)) {
-            auto shaderType = bslsp->GetShaderType();
-            if (shaderType == nifly::BSLSP_SKINTINT || shaderType == nifly::BSLSP_FACE) {
+            auto bslspType = bslsp->GetShaderType();
+            if (bslspType == nifly::BSLSP_SKINTINT || bslspType == nifly::BSLSP_FACE) {
                 tintColor = convertVector3(bslsp->skinTintColor);
                 hasTintColor = true;
             }
-            else if (shaderType == nifly::BSLSP_HAIRTINT) {
+            else if (bslspType == nifly::BSLSP_HAIRTINT) {
                 tintColor = convertVector3(bslsp->hairTintColor);
                 hasTintColor = true;
             }
 
-            if (shaderType == nifly::BSLSP_MULTILAYERPARALLAX) {
+            if (bslspType == nifly::BSLSP_MULTILAYERPARALLAX) {
                 innerScale = convertVector2(bslsp->parallaxInnerLayerTextureScale);
                 innerThickness = bslsp->parallaxInnerLayerThickness;
                 outerRefraction = bslsp->parallaxRefractionScale;
                 outerReflection = bslsp->parallaxEnvmapStrength;
             }
+        }
+
+        if (auto effectShader = dynamic_cast<nifly::BSEffectShaderProperty*>(shader)) {
+            hasWeaponBlood = effectShader->shaderFlags2 & 0x00020000;
         }
     }
     else {
@@ -375,6 +422,7 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     program->setUniformValue("hasBacklight", hasBacklight);
     program->setUniformValue("hasRimlight", hasRimlight);
     program->setUniformValue("hasTintColor", hasTintColor);
+    program->setUniformValue("hasWeaponBlood", hasWeaponBlood);
 
     program->setUniformValue("softlight", softlight);
     program->setUniformValue("backlightPower", backlightPower);
@@ -401,7 +449,21 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
         f->glCullFace(GL_BACK);
     }
 
-    f->glAlphaFunc(GL_GREATER, alphaThreshold);
+    if (alphaBlendEnable) {
+        f->glEnable(GL_BLEND);
+        f->glBlendFunc(srcBlendMode, dstBlendMode);
+    }
+    else {
+        f->glDisable(GL_BLEND);
+    }
+
+    if (alphaTestEnable) {
+        f->glEnable(GL_ALPHA_TEST);
+        f->glAlphaFunc(alphaTestMode, alphaThreshold);
+    }
+    else {
+        f->glDisable(GL_ALPHA_TEST);
+    }
 }
 
 QVector2D OpenGLShape::convertVector2(nifly::Vector2 vector)

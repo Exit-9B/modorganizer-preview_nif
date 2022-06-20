@@ -47,6 +47,7 @@ protected:
 private:
     void cleanup();
     void updateCamera();
+    nifly::BoundingSphere getBounds(nifly::NiShape* shape) const;
 
     inline static QWeakPointer<Camera> SharedCamera;
 
