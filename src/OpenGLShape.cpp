@@ -295,15 +295,19 @@ OpenGLShape::OpenGLShape(
                 };
 
             auto& flags = alphaProperty->flags;
-            alphaBlendEnable = flags & (1 << 0);
-            srcBlendMode = getBlendMode((flags & (0xF << 1)) >> 1);
-            dstBlendMode = getBlendMode((flags & (0xF << 5)) >> 5);
-            alphaTestEnable = flags & (1 << 9);
-            alphaTestMode = getTestMode((flags & (0x7 << 10)) >> 10);
+            alphaBlendEnable = bool((flags >> 0) & 0x1);
+            srcBlendMode = getBlendMode((flags >> 1) & 0xF);
+            dstBlendMode = getBlendMode((flags >> 5) & 0xF);
+            alphaTestEnable = bool((flags >> 9) & 0x1);
+            alphaTestMode = getTestMode((flags >> 10) & 0x7);
+
             alphaThreshold = alphaProperty->threshold / 255.0f;
         }
 
         if (auto bslsp = dynamic_cast<nifly::BSLightingShaderProperty*>(shader)) {
+            zBufferWrite = bool(bslsp->shaderFlags2 & 0x00000001);
+            zBufferTest = bool(bslsp->shaderFlags1 & 0x80000000);
+
             auto bslspType = bslsp->GetShaderType();
             if (bslspType == nifly::BSLSP_SKINTINT || bslspType == nifly::BSLSP_FACE) {
                 tintColor = convertVector3(bslsp->skinTintColor);
@@ -440,6 +444,15 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     }
 
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+
+    f->glDepthMask(zBufferWrite ? GL_TRUE : GL_FALSE);
+
+    if (zBufferTest) {
+        f->glEnable(GL_DEPTH_TEST);
+    }
+    else {
+        f->glDisable(GL_DEPTH_TEST);
+    }
 
     if (doubleSided) {
         f->glDisable(GL_CULL_FACE);
