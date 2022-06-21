@@ -196,6 +196,8 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
         static_cast<QOpenGLTexture::SwizzleValue>(format.Swizzles[2]),
         static_cast<QOpenGLTexture::SwizzleValue>(format.Swizzles[3]));
 
+    glTexture->setWrapMode(QOpenGLTexture::Repeat);
+
     auto extent = texture.extent();
     const GLsizei faceTotal = texture.layers() * texture.faces();
 
