@@ -1,4 +1,5 @@
 #include "OpenGLShape.h"
+#include "NifExtensions.h"
 
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
@@ -41,12 +42,7 @@ OpenGLShape::OpenGLShape(
     vertexArray->create();
     auto binder = QOpenGLVertexArrayObject::Binder(vertexArray);
 
-    nifly::MatTransform xform = niShape->GetTransformToParent();
-    nifly::NiNode* parent = nifFile->GetParentNode(niShape);
-    while (parent) {
-        xform = parent->GetTransformToParent().ComposeTransforms(xform);
-        parent = nifFile->GetParentNode(parent);
-    }
+    auto xform = GetShapeTransformToGlobal(nifFile, niShape);
     modelMatrix = convertTransform(xform);
 
     f->glVertexAttrib3f(AttribNormal, 0.5f, 0.5f, 1.0f);
@@ -262,51 +258,20 @@ OpenGLShape::OpenGLShape(
 
         if (auto alphaProperty = nifFile->GetAlphaProperty(niShape)) {
 
-            static auto getBlendMode =
-                [](int flags) {
-                    switch (flags) {
-                    case 0: return GL_ONE;
-                    case 1: return GL_ZERO;
-                    case 2: return GL_SRC_COLOR;
-                    case 3: return GL_ONE_MINUS_SRC_COLOR;
-                    case 4: return GL_DST_COLOR;
-                    case 5: return GL_ONE_MINUS_DST_COLOR;
-                    case 6: return GL_SRC_ALPHA;
-                    case 7: return GL_ONE_MINUS_SRC_ALPHA;
-                    case 8: return GL_DST_ALPHA;
-                    case 9: return GL_ONE_MINUS_DST_ALPHA;
-                    default: return GL_ONE;
-                    }
-                };
+            NiAlphaPropertyFlags flags = alphaProperty->flags;
 
-            static auto getTestMode =
-                [](int flags) {
-                    switch (flags) {
-                    case 0: return GL_ALWAYS;
-                    case 1: return GL_LESS;
-                    case 2: return GL_EQUAL;
-                    case 3: return GL_LEQUAL;
-                    case 4: return GL_GREATER;
-                    case 5: return GL_NOTEQUAL;
-                    case 6: return GL_GEQUAL;
-                    case 7: return GL_NEVER;
-                    default: return GL_ALWAYS;
-                    }
-                };
-
-            auto& flags = alphaProperty->flags;
-            alphaBlendEnable = bool((flags >> 0) & 0x1);
-            srcBlendMode = getBlendMode((flags >> 1) & 0xF);
-            dstBlendMode = getBlendMode((flags >> 5) & 0xF);
-            alphaTestEnable = bool((flags >> 9) & 0x1);
-            alphaTestMode = getTestMode((flags >> 10) & 0x7);
+            alphaBlendEnable = flags.isAlphaBlendEnabled();
+            srcBlendMode = flags.sourceBlendingFactor();
+            dstBlendMode = flags.destinationBlendingFactor();
+            alphaTestEnable = flags.isAlphaTestEnabled();
+            alphaTestMode = flags.alphaTestMode();
 
             alphaThreshold = alphaProperty->threshold / 255.0f;
         }
 
         if (auto bslsp = dynamic_cast<nifly::BSLightingShaderProperty*>(shader)) {
-            zBufferWrite = bool(bslsp->shaderFlags2 & 0x00000001);
-            zBufferTest = bool(bslsp->shaderFlags1 & 0x80000000);
+            zBufferTest = bslsp->shaderFlags1 & SLSF1::ZBufferTest;
+            zBufferWrite = bslsp->shaderFlags2 & SLSF2::ZBufferWrite;
 
             auto bslspType = bslsp->GetShaderType();
             if (bslspType == nifly::BSLSP_SKINTINT || bslspType == nifly::BSLSP_FACE) {
@@ -327,7 +292,7 @@ OpenGLShape::OpenGLShape(
         }
 
         if (auto effectShader = dynamic_cast<nifly::BSEffectShaderProperty*>(shader)) {
-            hasWeaponBlood = effectShader->shaderFlags2 & 0x00020000;
+            hasWeaponBlood = effectShader->shaderFlags2 & SLSF2::WeaponBlood;
         }
     }
     else {

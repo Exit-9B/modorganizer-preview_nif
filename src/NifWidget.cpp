@@ -1,4 +1,5 @@
 #include "NifWidget.h"
+#include "NifExtensions.h"
 
 #include <QMouseEvent>
 #include <QWheelEvent>
@@ -78,27 +79,6 @@ void NifWidget::wheelEvent(QWheelEvent* event)
     m_Camera->zoomFactor(1.0f - (event->angleDelta().y() / 120.0f * 0.38f));
 }
 
-nifly::BoundingSphere NifWidget::getBounds(nifly::NiShape* shape) const
-{
-    if (auto vertices = m_NifFile->GetVertsForShape(shape)) {
-        auto bounds = nifly::BoundingSphere(*vertices);
-
-        nifly::MatTransform xform = shape->GetTransformToParent();
-        nifly::NiNode* parent = m_NifFile->GetParentNode(shape);
-        while (parent) {
-            xform = parent->GetTransformToParent().ComposeTransforms(xform);
-            parent = m_NifFile->GetParentNode(parent);
-        }
-
-        bounds.center = xform.ApplyTransform(bounds.center);
-        bounds.radius = xform.ApplyTransformToDist(bounds.radius);
-        return bounds;
-    }
-    else {
-        return nifly::BoundingSphere();
-    }
-}
-
 void NifWidget::initializeGL()
 {
     if (m_Logger) {
@@ -125,7 +105,7 @@ void NifWidget::initializeGL()
 
         float largestRadius = 0.0f;
         for (auto& shape : shapes) {
-            auto bounds = getBounds(shape);
+            auto bounds = GetBoundingSphere(m_NifFile.get(), shape);
 
             if (bounds.radius > largestRadius) {
                 largestRadius = bounds.radius;
