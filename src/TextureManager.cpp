@@ -211,12 +211,16 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     {
         auto extent = texture.extent(level);
 
+        target = gli::is_target_cube(texture.target())
+            ? static_cast<GLenum>(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face)
+            : target;
+
         // Qt's upload functions lag badly so we just use the GL API
         switch (texture.target()) {
         case gli::TARGET_1D:
             if (gli::is_compressed(texture.format())) {
                 f->glCompressedTexSubImage1D(
-                    glTexture->target(),
+                    target,
                     level,
                     0,
                     extent.x,
@@ -226,7 +230,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
             }
             else {
                 f->glTexSubImage1D(
-                    glTexture->target(),
+                    target,
                     level,
                     0,
                     extent.x,
@@ -240,7 +244,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
         case gli::TARGET_CUBE:
             if (gli::is_compressed(texture.format())) {
                 f->glCompressedTexSubImage2D(
-                    glTexture->target(),
+                    target,
                     level,
                     0, 0,
                     extent.x,
@@ -251,7 +255,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
             }
             else {
                 f->glTexSubImage2D(
-                    glTexture->target(),
+                    target,
                     level,
                     0, 0,
                     extent.x,
@@ -266,7 +270,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
         case gli::TARGET_CUBE_ARRAY:
             if (gli::is_compressed(texture.format())) {
                 f->glCompressedTexSubImage3D(
-                    glTexture->target(),
+                    target,
                     level,
                     0, 0, 0,
                     extent.x, extent.y,
@@ -277,7 +281,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
             }
             else {
                 f->glTexSubImage3D(
-                    glTexture->target(),
+                    target,
                     level,
                     0, 0, 0,
                     extent.x, extent.y,
