@@ -75,10 +75,31 @@ OpenGLShape::OpenGLShape(
     auto xform = GetShapeTransformToGlobal(nifFile, niShape);
     modelMatrix = convertTransform(xform);
 
-    f->glVertexAttrib3f(AttribNormal, 0.5f, 0.5f, 1.0f);
-    f->glVertexAttrib3f(AttribTangent, 1.0f, 0.5, 0.5f);
-    f->glVertexAttrib3f(AttribBitangent, 0.5f, 1.0f, 0.5f);
+    f->glVertexAttrib2f(AttribTexCoord, 0.0f, 0.0f);
     f->glVertexAttrib4f(AttribColor, 1.0f, 1.0f, 1.0f, 1.0f);
+
+    // AMD GPU fails to render without vertex data
+    if (!niShape->HasNormals()) {
+        niShape->SetNormals(true);
+        if (auto geomData = niShape->GetGeomData()) {
+            geomData->RecalcNormals();
+        }
+    }
+
+    if (!niShape->HasTangents()) {
+        niShape->SetTangents(true);
+        if (auto geomData = niShape->GetGeomData()) {
+            geomData->CalcTangentSpace();
+        }
+    }
+
+    if (!niShape->HasUVs()) {
+        niShape->SetUVs(true);
+    }
+
+    if (!niShape->HasVertexColors()) {
+        niShape->SetVertexColors(true);
+    }
 
     if (auto verts = nifFile->GetVertsForShape(niShape)) {
         vertexBuffers[AttribPosition] = makeVertexBuffer(verts, AttribPosition);
