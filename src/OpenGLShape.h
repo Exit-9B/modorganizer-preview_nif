@@ -1,16 +1,16 @@
 #pragma once
 
-#include <NifFile.hpp>
+#include "ShaderManager.h"
+#include "TextureManager.h"
+
 #include <Geometry.hpp>
+#include <NifFile.hpp>
 
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 #include <QWidget>
-
-#include "ShaderManager.h"
-#include "TextureManager.h"
 
 enum TextureSlot
 {
@@ -45,16 +45,10 @@ public:
     static QMatrix4x4 convertTransform(nifly::MatTransform transform);
 
     ShaderManager::ShaderType shaderType = ShaderManager::SKDefault;
+
     QOpenGLVertexArrayObject* vertexArray = nullptr;
 
-    QOpenGLBuffer* vertexBuffer = nullptr;
-    QOpenGLBuffer* normalBuffer = nullptr;
-    QOpenGLBuffer* tangentBuffer = nullptr;
-    QOpenGLBuffer* bitangentBuffer = nullptr;
-    QOpenGLBuffer* texCoordBuffer = nullptr;
-    QOpenGLBuffer* colorBuffer = nullptr;
-    QOpenGLBuffer* boneIndexBuffer = nullptr;
-    QOpenGLBuffer* boneWeightBuffer = nullptr;
+    QOpenGLBuffer* vertexBuffers[ATTRIB_COUNT] { nullptr };
 
     QOpenGLBuffer* indexBuffer = nullptr;
     GLsizei elements = 0;

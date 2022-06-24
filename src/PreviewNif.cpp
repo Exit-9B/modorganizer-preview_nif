@@ -1,6 +1,7 @@
 #include <NifFile.hpp>
 
 #include "PreviewNif.h"
+#include "NifExtensions.h"
 #include "NifWidget.h"
 
 #include <QGridLayout>

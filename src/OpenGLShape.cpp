@@ -4,6 +4,36 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
 
+template <typename T>
+inline static QOpenGLBuffer* makeVertexBuffer(const std::vector<T>* data, GLuint attrib)
+{
+    QOpenGLBuffer* buffer = nullptr;
+
+    if (data) {
+        buffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+        if (buffer->create() && buffer->bind()) {
+            buffer->allocate(data->data(), data->size() * sizeof(T));
+
+            auto f = QOpenGLContext::currentContext()
+                ->versionFunctions<QOpenGLFunctions_2_1>();
+
+            f->glEnableVertexAttribArray(attrib);
+
+            f->glVertexAttribPointer(
+                attrib,
+                sizeof(T) / sizeof(float),
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(T),
+                nullptr);
+
+            buffer->release();
+        }
+    }
+
+    return buffer;
+}
+
 OpenGLShape::OpenGLShape(
     nifly::NifFile* nifFile,
     nifly::NiShape* niShape,
@@ -50,145 +80,34 @@ OpenGLShape::OpenGLShape(
     f->glVertexAttrib3f(AttribBitangent, 0.5f, 1.0f, 0.5f);
     f->glVertexAttrib4f(AttribColor, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    if (auto vertices = nifFile->GetVertsForShape(niShape)) {
-        vertexBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-        if (vertexBuffer->create()) {
-            vertexBuffer->bind();
-
-            vertexBuffer->allocate(
-                vertices->data(),
-                vertices->size() * sizeof(nifly::Vector3));
-
-            f->glEnableVertexAttribArray(AttribPosition);
-            f->glVertexAttribPointer(
-                AttribPosition,
-                3,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(nifly::Vector3),
-                nullptr);
-            }
-
-            vertexBuffer->release();
+    if (auto verts = nifFile->GetVertsForShape(niShape)) {
+        vertexBuffers[AttribPosition] = makeVertexBuffer(verts, AttribPosition);
     }
 
     if (auto normals = nifFile->GetNormalsForShape(niShape)) {
-        normalBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-        if (normalBuffer->create()) {
-            normalBuffer->bind();
-
-            normalBuffer->allocate(
-                normals->data(),
-                normals->size() * sizeof(nifly::Vector3));
-
-            f->glEnableVertexAttribArray(AttribNormal);
-            f->glVertexAttribPointer(
-                AttribNormal,
-                3,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(nifly::Vector3),
-                nullptr);
-
-            normalBuffer->release();
-        }
+        vertexBuffers[AttribNormal] = makeVertexBuffer(normals, AttribNormal);
     }
 
     if (auto tangents = nifFile->GetTangentsForShape(niShape)) {
-        tangentBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-        if (tangentBuffer->create()) {
-            tangentBuffer->bind();
-
-            tangentBuffer->allocate(
-                tangents->data(),
-                tangents->size() * sizeof(nifly::Vector3));
-
-            f->glEnableVertexAttribArray(AttribTangent);
-            f->glVertexAttribPointer(
-                AttribTangent,
-                3,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(nifly::Vector3),
-                nullptr);
-
-            tangentBuffer->release();
-        }
+        vertexBuffers[AttribTangent] = makeVertexBuffer(tangents, AttribTangent);
     }
 
     if (auto bitangents = nifFile->GetBitangentsForShape(niShape)) {
-        bitangentBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-        if (bitangentBuffer->create()) {
-            bitangentBuffer->bind();
-
-            bitangentBuffer->allocate(
-                bitangents->data(),
-                bitangents->size() * sizeof(nifly::Vector3));
-
-            f->glEnableVertexAttribArray(AttribBitangent);
-            f->glVertexAttribPointer(
-                AttribBitangent,
-                3,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(nifly::Vector3),
-                nullptr);
-
-            bitangentBuffer->release();
-        }
+        vertexBuffers[AttribBitangent] = makeVertexBuffer(bitangents, AttribBitangent);
     }
 
-    if (auto texCoords = nifFile->GetUvsForShape(niShape)) {
-        texCoordBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-        if (texCoordBuffer->create()) {
-            texCoordBuffer->bind();
-
-            texCoordBuffer->allocate(
-                texCoords->data(),
-                texCoords->size() * sizeof(nifly::Vector2));
-
-            f->glEnableVertexAttribArray(AttribTexCoord);
-            f->glVertexAttribPointer(
-                AttribTexCoord,
-                2,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(nifly::Vector2),
-                nullptr);
-
-            texCoordBuffer->release();
-        }
+    if (auto uvs = nifFile->GetUvsForShape(niShape)) {
+        vertexBuffers[AttribTexCoord] = makeVertexBuffer(uvs, AttribTexCoord);
     }
 
-    std::vector<nifly::Color4> colors;
-    if (nifFile->GetColorsForShape(niShape, colors)) {
-        colorBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-        if (colorBuffer->create()) {
-            colorBuffer->bind();
-
-            colorBuffer->allocate(
-                colors.data(),
-                colors.size() * sizeof(nifly::Color4));
-
-            f->glEnableVertexAttribArray(AttribColor);
-            f->glVertexAttribPointer(
-                AttribColor,
-                4,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(nifly::Color4),
-                nullptr);
-
-            colorBuffer->release();
-        }
+    if (std::vector<nifly::Color4> colors; nifFile->GetColorsForShape(niShape, colors)) {
+        vertexBuffers[AttribColor] = makeVertexBuffer(&colors, AttribColor);
     }
 
     indexBuffer = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-    if (indexBuffer->create()) {
-        indexBuffer->bind();
+    if (indexBuffer->create() && indexBuffer->bind()) {
 
-        std::vector<nifly::Triangle> tris;
-        if (niShape->GetTriangles(tris)) {
+        if (std::vector<nifly::Triangle> tris; niShape->GetTriangles(tris)) {
             indexBuffer->allocate(tris.data(), tris.size() * sizeof(nifly::Triangle));
         }
 
@@ -303,39 +222,18 @@ OpenGLShape::OpenGLShape(
 
 void OpenGLShape::destroy()
 {
-    if (vertexBuffer) {
-        vertexBuffer->destroy();
-        delete vertexBuffer;
-    }
-
-    if (normalBuffer) {
-        normalBuffer->destroy();
-        delete normalBuffer;
-    }
-
-    if (tangentBuffer) {
-        tangentBuffer->destroy();
-        delete tangentBuffer;
-    }
-
-    if (bitangentBuffer) {
-        bitangentBuffer->destroy();
-        delete bitangentBuffer;
-    }
-
-    if (texCoordBuffer) {
-        texCoordBuffer->destroy();
-        delete texCoordBuffer;
-    }
-
-    if (colorBuffer) {
-        colorBuffer->destroy();
-        delete colorBuffer;
+    for (std::size_t i = 0; i < ATTRIB_COUNT; i++) {
+        if (vertexBuffers[i]) {
+            vertexBuffers[i]->destroy();
+            delete vertexBuffers[i];
+            vertexBuffers[i] = nullptr;
+        }
     }
 
     if (indexBuffer) {
         indexBuffer->destroy();
         delete indexBuffer;
+        indexBuffer = nullptr;
     }
 
     if (vertexArray) {
@@ -409,6 +307,15 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
     }
 
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+
+    for (std::size_t i = 0; i < ATTRIB_COUNT; i++) {
+        if (vertexBuffers[i]) {
+            f->glEnableVertexAttribArray(i);
+        }
+        else {
+            f->glDisableVertexAttribArray(i);
+        }
+    }
 
     f->glDepthMask(zBufferWrite ? GL_TRUE : GL_FALSE);
 

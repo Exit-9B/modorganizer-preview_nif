@@ -11,6 +11,8 @@ enum VertexAttrib
     AttribBitangent = 3,
     AttribTexCoord = 4,
     AttribColor = 5,
+
+    ATTRIB_COUNT,
 };
 
 class ShaderManager
