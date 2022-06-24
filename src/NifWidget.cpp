@@ -95,6 +95,10 @@ void NifWidget::initializeGL()
 
     auto shapes = m_NifFile->GetShapes();
     for (auto& shape : shapes) {
+        if (shape->flags & TriShape::Hidden) {
+            continue;
+        }
+
         m_GLShapes.emplace_back(m_NifFile.get(), shape, m_TextureManager.get());
     }
 
