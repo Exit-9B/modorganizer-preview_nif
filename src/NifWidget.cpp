@@ -2,9 +2,9 @@
 #include "NifExtensions.h"
 
 #include <QMouseEvent>
-#include <QWheelEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
+#include <QOpenGLVersionFunctionsFactory>
 using OpenGLFunctions = QOpenGLFunctions_2_1;
 
 NifWidget::NifWidget(
@@ -131,7 +131,7 @@ void NifWidget::initializeGL()
             update();
         });
 
-    auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
+    auto f = QOpenGLVersionFunctionsFactory::get<OpenGLFunctions>(QOpenGLContext::currentContext());
 
     f->glEnable(GL_DEPTH_TEST);
     f->glDepthFunc(GL_LEQUAL);
@@ -140,7 +140,7 @@ void NifWidget::initializeGL()
 
 void NifWidget::paintGL()
 {
-    auto f = QOpenGLContext::currentContext()->versionFunctions<OpenGLFunctions>();
+    auto f = QOpenGLVersionFunctionsFactory::get<OpenGLFunctions>(QOpenGLContext::currentContext());
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (auto& shape : m_GLShapes) {

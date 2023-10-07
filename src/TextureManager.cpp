@@ -4,11 +4,11 @@
 #include <iplugingame.h>
 #include <dataarchives.h>
 
-#include <gli/gli.hpp>
 #include <libbsarch.h>
 
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
+#include <QOpenGLVersionFunctionsFactory>
 #include <QVector4D>
 
 #include <memory>
@@ -181,7 +181,7 @@ QOpenGLTexture* TextureManager::makeTexture(const gli::texture& texture)
     const gli::gl::format format = GL.translate(texture.format(), texture.swizzles());
     GLenum target = GL.translate(texture.target());
 
-    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+    auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_2_1>(QOpenGLContext::currentContext());
     QOpenGLTexture* glTexture = new QOpenGLTexture(static_cast<QOpenGLTexture::Target>(target));
 
     glTexture->create();

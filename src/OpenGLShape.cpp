@@ -3,6 +3,7 @@
 
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
+#include <QOpenGLVersionFunctionsFactory>
 
 template <typename T>
 inline static QOpenGLBuffer* makeVertexBuffer(const std::vector<T>* data, GLuint attrib)
@@ -14,8 +15,7 @@ inline static QOpenGLBuffer* makeVertexBuffer(const std::vector<T>* data, GLuint
         if (buffer->create() && buffer->bind()) {
             buffer->allocate(data->data(), data->size() * sizeof(T));
 
-            auto f = QOpenGLContext::currentContext()
-                ->versionFunctions<QOpenGLFunctions_2_1>();
+            auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_2_1>(QOpenGLContext::currentContext());
 
             f->glEnableVertexAttribArray(attrib);
 
@@ -39,7 +39,7 @@ OpenGLShape::OpenGLShape(
     nifly::NiShape* niShape,
     TextureManager* textureManager)
 {
-    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+    auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_2_1>(QOpenGLContext::currentContext());
 
     auto shader = nifFile->GetShader(niShape);
     auto& version = nifFile->GetHeader().GetVersion();
@@ -327,7 +327,7 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
         program->setUniformValue("outerReflection", outerReflection);
     }
 
-    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+    auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_2_1>(QOpenGLContext::currentContext());
 
     for (std::size_t i = 0; i < ATTRIB_COUNT; i++) {
         if (vertexBuffers[i]) {
