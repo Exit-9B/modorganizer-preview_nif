@@ -21,4 +21,7 @@ jobs:
           name: preview_nif
           path: |
             ./build/modorganizer_super/${{ github.event.repository.name }}/vsbuild/src/RelWithDebInfo/preview_nif.dll
-            **/data/shaders/*
+      - uses: actions/upload-artifact@v3
+        with:
+          name: preview_nif
+          path: "**/data/shaders/*"
