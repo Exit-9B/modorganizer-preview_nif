@@ -45,7 +45,7 @@ bool PreviewNif::enabledByDefault() const
 
 std::set<QString> PreviewNif::supportedExtensions() const
 {
-    return { "nif" };
+    return { "bto", "btr", "nif" };
 }
 
 QWidget* PreviewNif::genFilePreview(const QString& fileName, const QSize& maxSize) const
