@@ -24,4 +24,5 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: preview_nif
-          path: "**/data/shaders/*"
+          path: |
+            ./build/modorganizer_super/${{ github.event.repository.name }}/**/data/shaders/*
