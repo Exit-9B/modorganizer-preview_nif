@@ -15,3 +15,10 @@ jobs:
         with:
           mo2-third-parties: fmt libbsarch
           mo2-dependencies: cmake_common uibase
+      - name: Upload Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: preview_nif
+          path: |
+            ./build/modorganizer_super/${{ github.event.repository.name }}/vsbuild/src/RelWithDebInfo/preview_nif.dll
+            **/data/shaders/*
