@@ -1,0 +1,28 @@
+name: Build NIF Preview Plugin
+
+on:
+  push:
+    branches: main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Build NIF Preview Plugin
+        uses: ModOrganizer2/build-with-mob-action@master
+        with:
+          mo2-third-parties: fmt libbsarch
+          mo2-dependencies: cmake_common uibase
+      - name: Upload Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: preview_nif
+          path: |
+            ./build/modorganizer_super/${{ github.event.repository.name }}/vsbuild/src/RelWithDebInfo/preview_nif.dll
+      - uses: actions/upload-artifact@v3
+        with:
+          name: preview_nif
+          path: |
+            ./build/modorganizer_super/${{ github.event.repository.name }}/**/data/shaders/*

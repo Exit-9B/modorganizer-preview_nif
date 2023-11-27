@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.16)
-if(DEFINED DEPENDENCIES_DIR)
-	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/src.cmake)
-else()
-	include(../../cmake_common/src.cmake)
-endif()
-requires_library(libbsarch)
-requires_project(game_features)
+cmake_minimum_required(VERSION 3.22)
+
+add_library(preview_nif SHARED)
+mo2_configure_plugin(
+	preview_nif
+	WARNINGS OFF
+	PRIVATE_DEPENDS Qt::OpenGLWidgets fmt libbsarch uibase
+)
+mo2_install_target(preview_nif)

@@ -30,7 +30,7 @@ QString PreviewNif::description() const
 
 MOBase::VersionInfo PreviewNif::version() const
 {
-    return MOBase::VersionInfo(0, 1, 8, 1, MOBase::VersionInfo::RELEASE_BETA);
+    return MOBase::VersionInfo(0, 2, 0, 0, MOBase::VersionInfo::RELEASE_BETA);
 }
 
 QList<MOBase::PluginSetting> PreviewNif::settings() const
@@ -45,7 +45,7 @@ bool PreviewNif::enabledByDefault() const
 
 std::set<QString> PreviewNif::supportedExtensions() const
 {
-    return { "nif" };
+    return { "bto", "btr", "nif" };
 }
 
 QWidget* PreviewNif::genFilePreview(const QString& fileName, const QSize& maxSize) const
