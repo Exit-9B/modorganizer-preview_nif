@@ -14,3 +14,4 @@ jobs:
         uses: ModOrganizer2/build-with-mob-action@master
         with:
           mo2-third-parties: libbsarch
+          mo2-dependencies: cmake_common
