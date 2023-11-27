@@ -3,6 +3,7 @@
 
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_2_1>
+#include <QOpenGLVersionFunctionsFactory>
 
 template <typename T>
 inline static QOpenGLBuffer* makeVertexBuffer(const std::vector<T>* data, GLuint attrib)
@@ -14,18 +15,13 @@ inline static QOpenGLBuffer* makeVertexBuffer(const std::vector<T>* data, GLuint
         if (buffer->create() && buffer->bind()) {
             buffer->allocate(data->data(), data->size() * sizeof(T));
 
-            auto f = QOpenGLContext::currentContext()
-                ->versionFunctions<QOpenGLFunctions_2_1>();
+            auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_2_1>(
+                QOpenGLContext::currentContext());
 
             f->glEnableVertexAttribArray(attrib);
 
-            f->glVertexAttribPointer(
-                attrib,
-                sizeof(T) / sizeof(float),
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(T),
-                nullptr);
+            f->glVertexAttribPointer(attrib, sizeof(T) / sizeof(float), GL_FLOAT,
+                                     GL_FALSE, sizeof(T), nullptr);
 
             buffer->release();
         }
@@ -34,14 +30,13 @@ inline static QOpenGLBuffer* makeVertexBuffer(const std::vector<T>* data, GLuint
     return buffer;
 }
 
-OpenGLShape::OpenGLShape(
-    nifly::NifFile* nifFile,
-    nifly::NiShape* niShape,
-    TextureManager* textureManager)
+OpenGLShape::OpenGLShape(nifly::NifFile* nifFile, nifly::NiShape* niShape,
+                         TextureManager* textureManager)
 {
-    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+    auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_2_1>(
+        QOpenGLContext::currentContext());
 
-    auto shader = nifFile->GetShader(niShape);
+    auto shader   = nifFile->GetShader(niShape);
     auto& version = nifFile->GetHeader().GetVersion();
     if (version.IsFO4()) {
         if (shader && shader->HasType<nifly::BSEffectShaderProperty>()) {
@@ -59,7 +54,8 @@ OpenGLShape::OpenGLShape(
             if (shader && shader->IsModelSpace()) {
                 shaderType = ShaderManager::SKMSN;
             }
-            else if (shader && shader->GetShaderType() == nifly::BSLSP_MULTILAYERPARALLAX) {
+            else if (shader &&
+                     shader->GetShaderType() == nifly::BSLSP_MULTILAYERPARALLAX) {
                 shaderType = ShaderManager::SKMultilayer;
             }
             else {
@@ -72,7 +68,7 @@ OpenGLShape::OpenGLShape(
     vertexArray->create();
     auto binder = QOpenGLVertexArrayObject::Binder(vertexArray);
 
-    auto xform = GetShapeTransformToGlobal(nifFile, niShape);
+    auto xform  = GetShapeTransformToGlobal(nifFile, niShape);
     modelMatrix = convertTransform(xform);
 
     f->glVertexAttrib2f(AttribTexCoord, 0.0f, 0.0f);
@@ -121,7 +117,8 @@ OpenGLShape::OpenGLShape(
         vertexBuffers[AttribTexCoord] = makeVertexBuffer(uvs, AttribTexCoord);
     }
 
-    if (std::vector<nifly::Color4> colors; nifFile->GetColorsForShape(niShape, colors)) {
+    if (std::vector<nifly::Color4> colors;
+        nifFile->GetColorsForShape(niShape, colors)) {
         vertexBuffers[AttribColor] = makeVertexBuffer(&colors, AttribColor);
     }
 
@@ -139,7 +136,7 @@ OpenGLShape::OpenGLShape(
     if (shader) {
         if (shader->HasTextureSet()) {
             auto textureSetRef = shader->TextureSetRef();
-            auto textureSet = nifFile->GetHeader().GetBlock(textureSetRef);
+            auto textureSet    = nifFile->GetHeader().GetBlock(textureSetRef);
 
             for (std::size_t i = 0; i < textureSet->textures.size(); i++) {
                 auto texturePath = textureSet->textures[i].get();
@@ -171,61 +168,61 @@ OpenGLShape::OpenGLShape(
             }
         }
 
-        specColor = convertVector3(shader->GetSpecularColor());
-        specStrength = shader->GetSpecularStrength();
+        specColor      = convertVector3(shader->GetSpecularColor());
+        specStrength   = shader->GetSpecularStrength();
         specGlossiness = qBound(0.0f, shader->GetGlossiness(), 128.0f);
-        fresnelPower = shader->GetFresnelPower();
-        paletteScale = shader->GetGrayscaleToPaletteScale();
+        fresnelPower   = shader->GetFresnelPower();
+        paletteScale   = shader->GetGrayscaleToPaletteScale();
 
         hasGlowMap = shader->HasGlowmap();
-        glowColor = convertColor(shader->GetEmissiveColor());
-        glowMult = shader->GetEmissiveMultiple();
+        glowColor  = convertColor(shader->GetEmissiveColor());
+        glowMult   = shader->GetEmissiveMultiple();
 
-        alpha = shader->GetAlpha();
-        uvScale = convertVector2(shader->GetUVScale());
+        alpha    = shader->GetAlpha();
+        uvScale  = convertVector2(shader->GetUVScale());
         uvOffset = convertVector2(shader->GetUVOffset());
 
-        hasEmit = shader->IsEmissive();
+        hasEmit      = shader->IsEmissive();
         hasSoftlight = shader->HasSoftlight();
         hasBacklight = shader->HasBacklight();
-        hasRimlight = shader->HasRimlight();
+        hasRimlight  = shader->HasRimlight();
 
-        softlight = shader->GetSoftlight();
+        softlight      = shader->GetSoftlight();
         backlightPower = shader->GetBacklightPower();
-        rimPower = shader->GetRimlightPower();
-        doubleSided = shader->IsDoubleSided();
-        envReflection = shader->GetEnvironmentMapScale();
+        rimPower       = shader->GetRimlightPower();
+        doubleSided    = shader->IsDoubleSided();
+        envReflection  = shader->GetEnvironmentMapScale();
 
         if (auto alphaProperty = nifFile->GetAlphaProperty(niShape)) {
 
             NiAlphaPropertyFlags flags = alphaProperty->flags;
 
             alphaBlendEnable = flags.isAlphaBlendEnabled();
-            srcBlendMode = flags.sourceBlendingFactor();
-            dstBlendMode = flags.destinationBlendingFactor();
-            alphaTestEnable = flags.isAlphaTestEnabled();
-            alphaTestMode = flags.alphaTestMode();
+            srcBlendMode     = flags.sourceBlendingFactor();
+            dstBlendMode     = flags.destinationBlendingFactor();
+            alphaTestEnable  = flags.isAlphaTestEnabled();
+            alphaTestMode    = flags.alphaTestMode();
 
             alphaThreshold = alphaProperty->threshold / 255.0f;
         }
 
         if (auto bslsp = dynamic_cast<nifly::BSLightingShaderProperty*>(shader)) {
-            zBufferTest = bslsp->shaderFlags1 & SLSF1::ZBufferTest;
+            zBufferTest  = bslsp->shaderFlags1 & SLSF1::ZBufferTest;
             zBufferWrite = bslsp->shaderFlags2 & SLSF2::ZBufferWrite;
 
             auto bslspType = bslsp->GetShaderType();
             if (bslspType == nifly::BSLSP_SKINTINT || bslspType == nifly::BSLSP_FACE) {
-                tintColor = convertVector3(bslsp->skinTintColor);
+                tintColor    = convertVector3(bslsp->skinTintColor);
                 hasTintColor = true;
             }
             else if (bslspType == nifly::BSLSP_HAIRTINT) {
-                tintColor = convertVector3(bslsp->hairTintColor);
+                tintColor    = convertVector3(bslsp->hairTintColor);
                 hasTintColor = true;
             }
 
             if (bslspType == nifly::BSLSP_MULTILAYERPARALLAX) {
-                innerScale = convertVector2(bslsp->parallaxInnerLayerTextureScale);
-                innerThickness = bslsp->parallaxInnerLayerThickness;
+                innerScale      = convertVector2(bslsp->parallaxInnerLayerTextureScale);
+                innerThickness  = bslsp->parallaxInnerLayerThickness;
                 outerRefraction = bslsp->parallaxRefractionScale;
                 outerReflection = bslsp->parallaxEnvmapStrength;
             }
@@ -236,7 +233,7 @@ OpenGLShape::OpenGLShape(
         }
     }
     else {
-        textures[BaseMap] = textureManager->getWhiteTexture();
+        textures[BaseMap]   = textureManager->getWhiteTexture();
         textures[NormalMap] = textureManager->getFlatNormalTexture();
     }
 }
@@ -327,7 +324,8 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
         program->setUniformValue("outerReflection", outerReflection);
     }
 
-    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_1>();
+    auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_2_1>(
+        QOpenGLContext::currentContext());
 
     for (std::size_t i = 0; i < ATTRIB_COUNT; i++) {
         if (vertexBuffers[i]) {
@@ -374,12 +372,12 @@ void OpenGLShape::setupShaders(QOpenGLShaderProgram* program)
 
 QVector2D OpenGLShape::convertVector2(nifly::Vector2 vector)
 {
-    return { vector.u, vector.v };
+    return {vector.u, vector.v};
 }
 
 QVector3D OpenGLShape::convertVector3(nifly::Vector3 vector)
 {
-    return { vector.x, vector.y, vector.z };
+    return {vector.x, vector.y, vector.z};
 }
 
 QColor OpenGLShape::convertColor(nifly::Color4 color)
@@ -391,9 +389,7 @@ QMatrix4x4 OpenGLShape::convertTransform(nifly::MatTransform transform)
 {
     auto mat = transform.ToMatrix();
     return QMatrix4x4{
-        mat[0],  mat[1],  mat[2],  mat[3],
-        mat[4],  mat[5],  mat[6],  mat[7],
-        mat[8],  mat[9],  mat[10], mat[11],
-        mat[12], mat[13], mat[14], mat[15],
+        mat[0], mat[1], mat[2],  mat[3],  mat[4],  mat[5],  mat[6],  mat[7],
+        mat[8], mat[9], mat[10], mat[11], mat[12], mat[13], mat[14], mat[15],
     };
 }
