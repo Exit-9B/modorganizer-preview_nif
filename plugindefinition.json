@@ -1,0 +1,42 @@
+{
+    "Name": "Preview NIF",
+    "Author": "Parapets",
+    "Description": "Supports previewing NIF files",
+    "DocsUrl": "",
+    "GithubUrl": "https://github.com/Exit-9B/modorganizer-preview_nif",
+    "NexusUrl": "https://www.nexusmods.com/skyrimspecialedition/mods/69813",
+    "Versions": [
+        {
+            "Version": "0.2.0b",
+            "Released": "2023-11-27",
+            "MinSupport": "2.5.0",
+            "MaxSupport": "2.5.0",
+            "MinWorking": "2.5.0",
+            "MaxWorking": "",
+            "DownloadUrl": "https://github.com/Exit-9B/modorganizer-preview_nif/releases/download/v0.2.0/preview_nif-0.2.0.7z",
+            "PluginPath": [
+                "preview_nif.dll",
+                "data"
+            ],
+            "LocalePath": [],
+            "DataPath": [],
+            "ReleaseNotes": []
+        },
+        {
+            "Version": "0.1.8.1b",
+            "Released": "2022-06-24",
+            "MinSupport": "2.4.3",
+            "MaxSupport": "2.4.4",
+            "MinWorking": "2.4.3",
+            "MaxWorking": "2.4.5a3",
+            "DownloadUrl": "https://github.com/Exit-9B/modorganizer-preview_nif/releases/download/v0.1.8/preview_nif-0.1.8.1.7z",
+            "PluginPath": [
+                "preview_nif.dll",
+                "data"
+            ],
+            "LocalePath": [],
+            "DataPath": [],
+            "ReleaseNotes": []
+        }
+    ]
+}
