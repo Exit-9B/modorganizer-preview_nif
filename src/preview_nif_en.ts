@@ -25,7 +25,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="TextureManager.cpp" line="118"/>
+        <location filename="TextureManager.cpp" line="120"/>
         <source>Failed to interface with managed game plugin</source>
         <translation type="unfinished"></translation>
     </message>

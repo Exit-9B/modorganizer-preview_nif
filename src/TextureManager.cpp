@@ -2,6 +2,7 @@
 #include "PreviewNif.h"
 
 #include <dataarchives.h>
+#include <igamefeatures.h>
 #include <iplugingame.h>
 
 #include <gli/gli.hpp>
@@ -112,6 +113,7 @@ QOpenGLTexture* TextureManager::loadTexture(QString texturePath)
     }
 
     auto game = m_MOInfo->managedGame();
+    auto features = m_MOInfo->gameFeatures();
 
     if (!game) {
         qCritical(qUtf8Printable(
@@ -124,7 +126,7 @@ QOpenGLTexture* TextureManager::loadTexture(QString texturePath)
         return makeTexture(gli::load(realPath.toStdString()));
     }
 
-    auto gameArchives = game->feature<DataArchives>();
+    auto gameArchives = features->gameFeature<MOBase::DataArchives>();
     if (!gameArchives) {
         return nullptr;
     }
